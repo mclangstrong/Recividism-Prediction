@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block page_title %}PDL Database{% endblock %}
+{% block header_title %}PDL Database{% endblock %}
+{% block header_subtitle %}Manage and view all Person Deprived of Liberty records{% endblock %}
+
+{% block content %}
+<!-- Search and Filters -->
+<div class="card mb-3">
+    <div class="card-body" style="padding: 0.875rem 1.25rem;">
+        <div class="row g-2">
+            <div class="col-md-5">
+                <input type="text" class="form-control form-control-sm" placeholder="🔍 Search by PDL ID or Name..."
+                    id="searchInput" style="font-size: 0.875rem;">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select form-select-sm" id="riskFilter" style="font-size: 0.875rem;">
+                    <option value="">All Risk Levels</option>
+                    <option value="low">Low Risk</option>
+                    <option value="medium">Medium Risk</option>
+                    <option value="high">High Risk</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ url_for('assessment_new') }}" class="btn btn-primary btn-sm w-100"
+                    style="font-size: 0.875rem;">
+                    <i class="fas fa-plus me-1" style="font-size: 0.75rem;"></i>New Assessment
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PDL Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center" style="padding: 0.75rem 1.25rem;">
+        <span style="font-size: 0.9rem;"><i class="fas fa-users me-2"></i>All PDL Records</span>
+        <span class="badge bg-primary" id="recordCount" style="font-size: 0.75rem; font-weight: normal;">0
+            records</span>
+    </div>
+    <div class="card-body" style="padding: 0; overflow-x: auto;">
+        <table class="table mb-0" style="font-size: 0.85rem;">
+            <thead style="background: #F8FAFC;">
+                <tr>
+                    <th style="padding: 0.65rem 0.875rem; font-size: 0.75rem; width: 50px;">Photo</th>
+                    <th style="padding: 0.65rem 0.875rem; font-size: 0.75rem;">PDL ID</th>
+                    <th style="padding: 0.65rem 0.875rem; font-size: 0.75rem;">Name</th>
+                    <th style="padding: 0.65rem 0.875rem; font-size: 0.75rem;">Age/Gender</th>
+                    <th style="padding: 0.65rem 0.875rem; font-size: 0.75rem;">Index Crime</th>
+                    <th style="padding: 0.65rem 0.875rem; font-size: 0.75rem;">Risk Level</th>
+                    <th style="padding: 0.65rem 0.875rem; font-size: 0.75rem;">Last Assessed</th>
+                    <th style="padding: 0.65rem 0.875rem; font-size: 0.75rem; width: 180px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="pdlTableBody">
+                <tr>
+                    <td colspan="8" class="text-center" style="padding: 3rem;">
+                        <div class="spinner"></div>
+                        <p class="text-secondary mt-2">Loading PDL records...</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- PDL Details Modal -->
+<div class="modal fade" id="pdlDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">PDL Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div
+                        style="width: 80px; height: 80px; border-radius: 50%; background: var(--bg-secondary); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                        <i class="fas fa-user fa-2x text-primary"></i>
+                    </div>
+                    <h4 id="modalPDLName" class="mb-1"></h4>
+                    <p id="modalPDLId" class="text-muted"></p>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title text-muted text-uppercase small mb-3">Latest Assessment</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Risk Level:</span>
+                            <span id="modalRiskLevel" class="badge"></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Final Probability:</span>
+                            <span id="modalProbability" class="fw-bold"></span>
+                        </div>
+
+
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                            <span>Date:</span>
+                            <span id="modalDate"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0 text-muted small text-uppercase">Rehabilitation Plan</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0" id="modalPlanList">
+                            <!-- Plan items will be loaded here -->
+                        </ul>
+                    </div>
+                    <div class="card-footer text-end">
+                        <a href="#" id="modalReportBtn" class="btn btn-sm btn-outline-primary d-none" target="_blank">
+                            <i class="fas fa-file-alt me-2"></i>View Full Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script>
+    let currentData = [];
+
+    // Fetch PDL records on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        fetchPDLRecords();
+    });
+
+    // Search input handler (debounced)
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', function (e) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            fetchPDLRecords();
+        }, 500);
+    });
+
+    // Risk filter handler
+    document.getElementById('riskFilter').addEventListener('change', function (e) {
+        fetchPDLRecords();
+    });
+
+    function fetchPDLRecords() {
+        const search = document.getElementById('searchInput').value.trim();
+        const risk = document.getElementById('riskFilter').value;
+
+        // Build query string
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (risk) params.append('risk', risk);
+
+        // Fetch from API
+        fetch(`/api/pdl/list?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                currentData = data.records || [];
+                displayPDLRecords(currentData);
+                document.getElementById('recordCount').textContent =
+                    `${data.total || 0} record${data.total !== 1 ? 's' : ''}`;
+            })
+            .catch(error => {
+                console.error('Error fetching PDL records:', error);
+                displayEmptyState('Error loading records');
+            });
+    }
+
+    function displayPDLRecords(records) {
+        const tbody = document.getElementById('pdlTableBody');
+
+        if (!records || records.length === 0) {
+            displayEmptyState('No PDL records found');
+            return;
+        }
+
+        let html = '';
+        records.forEach(pdl => {
+            // Match dashboard risk badge styling
+            let riskBadgeClass = 'bg-secondary';
+            if (pdl.latest_risk_level) {
+                const risk = pdl.latest_risk_level.toLowerCase();
+                if (risk === 'low') riskBadgeClass = 'bg-success';
+                else if (risk === 'medium') riskBadgeClass = 'bg-warning';
+                else if (risk === 'high') riskBadgeClass = 'bg-danger';
+            }
+
+            const assessDate = pdl.latest_assessment_date ?
+                new Date(pdl.latest_assessment_date).toLocaleDateString() :
+                'Never';
+
+            const probability = pdl.latest_probability ?
+                Math.round(pdl.latest_probability * 100) + '%' :
+                'N/A';
+
+            html += `
+            <tr>
+                <td>
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0, 102, 204, 0.1); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-user text-primary" style="font-size: 0.8rem;"></i>
+                    </div>
+                </td>
+                <td><span class="fw-bold text-primary">${pdl.pdl_id}</span></td>
+                <td>${pdl.name || 'Unknown'}</td>
+                <td>${pdl.age || 'N/A'} / ${pdl.gender || 'N/A'}</td>
+                <td>${pdl.index_crime || 'N/A'}</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold" style="font-size: 0.8rem; min-width: 38px;">${probability}</span>
+                        <span class="badge ${riskBadgeClass}" style="font-weight: 600; font-size: 0.7rem; padding: 0.25rem 0.5rem; color: #fff !important;">
+                            ${pdl.latest_risk_level || 'N/A'}
+                        </span>
+                    </div>
+                </td>
+                <td>${assessDate}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="viewPDLDetails('${pdl.pdl_id}')" style="font-size: 0.7rem; padding: 0.2rem 0.45rem; font-weight: normal;">
+                        <i class="fas fa-eye" style="font-size: 0.7rem;"></i> View
+                    </button>
+                    <a href="/assessment/new?name=${encodeURIComponent(pdl.name || '')}&pdl_id=${pdl.pdl_id}" class="btn btn-sm btn-primary" style="font-size: 0.7rem; padding: 0.2rem 0.45rem; font-weight: normal;">
+                        <i class="fas fa-plus" style="font-size: 0.7rem;"></i> Assess
+                    </a>
+                </td>
+            </tr>
+        `;
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    function displayEmptyState(message) {
+        const tbody = document.getElementById('pdlTableBody');
+        tbody.innerHTML = `
+        <tr>
+            <td colspan="8" class="text-center" style="padding: 3rem;">
+                <i class="fas fa-database fa-3x mb-3 d-block" style="opacity: 0.2;"></i>
+                <p class="text-secondary">${message}</p>
+                ${message.includes('No') ? `
+                    <a href="/assessment/new" class="btn btn-primary mt-2">
+                        <i class="fas fa-plus me-2"></i>Create First Assessment
+                    </a>
+                ` : ''}
+            </td>
+        </tr>
+    `;
+    }
+
+    function viewPDLDetails(pdlId) {
+        // Show modal immediately with loading state
+        const modal = new bootstrap.Modal(document.getElementById('pdlDetailsModal'));
+        modal.show();
+
+        document.getElementById('modalPDLId').textContent = 'ID: ' + pdlId;
+        document.getElementById('modalPDLName').textContent = 'Loading...';
+        document.getElementById('modalPlanList').innerHTML = '<li class="text-muted text-center"><div class="spinner-border spinner-border-sm me-2"></div>Loading details...</li>';
+        document.getElementById('modalReportBtn').classList.add('d-none');
+
+
+        // Fetch full details
+        fetch(`/api/pdl/${pdlId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                // Populate Basic Info
+                document.getElementById('modalPDLName').textContent = data.name || 'Unknown';
+
+                // Populate Risk Info
+                const riskBadge = document.getElementById('modalRiskLevel');
+                riskBadge.textContent = data.latest_risk_level || 'Not Assessed';
+                riskBadge.className = 'badge ' + (data.latest_risk_level ? `badge-risk-${data.latest_risk_level.toLowerCase()}` : 'bg-secondary');
+
+                const probability = data.latest_probability ? Math.round(data.latest_probability * 100) + '%' : 'N/A';
+                document.getElementById('modalProbability').textContent = probability;
+
+
+
+                const date = data.latest_assessment_date ? new Date(data.latest_assessment_date).toLocaleDateString() : 'Never';
+                document.getElementById('modalDate').textContent = date;
+
+                // Populate Rehabilitation Plan
+                const planList = document.getElementById('modalPlanList');
+                if (data.rehabilitation_plan && data.rehabilitation_plan.length > 0) {
+                    let html = '';
+                    data.rehabilitation_plan.forEach(item => {
+                        html += `<li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>${item}</li>`;
+                    });
+                    planList.innerHTML = html;
+                } else {
+                    planList.innerHTML = '<li class="text-muted text-center">No rehabilitation plan saved yet.</li>';
+                }
+
+                // Setup Report Button
+                const reportBtn = document.getElementById('modalReportBtn');
+                if (data.latest_prediction_id) {
+                    reportBtn.href = '/report/' + data.latest_prediction_id;
+                    reportBtn.classList.remove('d-none');
+                } else {
+                    reportBtn.classList.add('d-none');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('modalPlanList').innerHTML = '<li class="text-danger text-center">Error loading details</li>';
+                document.getElementById('modalReportBtn').classList.add('d-none');
+            });
+    }
+</script>
+{% endblock %}
+{% endblock %}

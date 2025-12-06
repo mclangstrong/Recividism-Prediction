@@ -1,0 +1,3 @@
+Age,Gender,Civil Status,Educational Attainment,Employment Status,Prior_Convictions,Offense Type,Sentence Length (years),Time Served (years),Substance Abuse History,Mental Health Issues,Family Support,Gang Affiliation,Program_Participation,Behavior Score
+25,Male,Single,High School,Unemployed,1,Property,3,2,No,No,Moderate,No,Yes,7
+30,Female,Married,College,Employed,0,Drugs,5,1,No,No,Strong,No,No,9

@@ -1,0 +1,248 @@
+================================================================================
+       RECIDIVISM PREDICTION SYSTEM - DATA ANALYTICS REPORT
+       Generated: 2025-12-05 15:14:53
+================================================================================
+
+1. DATASET OVERVIEW
+----------------------------------------
+   Total Records: 2000
+   Total Features: 62
+
+   Target Variable (Recidivism):
+      Reoffended (1): 1305 (65.2%)
+      Did Not Reoffend (0): 695 (34.8%)
+
+   *** OVERALL RECIDIVISM RATE: 65.2% ***
+
+
+2. DEMOGRAPHIC BREAKDOWN
+----------------------------------------
+
+   A. Gender Distribution:
+      Female: 1080 (54.0%)
+      Male: 920 (46.0%)
+
+      ** Recidivism Rate by Gender: **
+      Female: 710/1080 reoffended (65.7%)
+      Male: 595/920 reoffended (64.7%)
+
+   B. Civil Status Distribution:
+      Separated: 535 (26.8%)
+      Single: 514 (25.7%)
+      Widowed: 479 (23.9%)
+      Married: 472 (23.6%)
+
+      ** Recidivism Rate by Civil Status (Sorted by Risk): **
+      Separated: 366/535 reoffended (68.4%)
+      Single: 333/514 reoffended (64.8%)
+      Married: 303/472 reoffended (64.2%)
+      Widowed: 303/479 reoffended (63.3%)
+
+
+================================================================================
+3. DEEP DIVE: WIDOWED STATUS BY GENDER (EXPERT'S QUESTION)
+================================================================================
+   Question: Why is 'Widowed' a top predictor? Is it male or female?
+
+   Total Widowed in Dataset: 479 (23.9% of all)
+
+   A. Widowed Population by Gender:
+      Female: 264 (55.1% of widowed)
+      Male: 215 (44.9% of widowed)
+
+   B. *** RECIDIVISM RATE FOR WIDOWED BY GENDER: ***
+      Widowed Female: 173/264 reoffended (65.5%)
+      Widowed Male: 130/215 reoffended (60.5%)
+
+   C. Comparison with Non-Widowed (Same Gender):
+      Male:
+         Non-Widowed: 66.0% recidivism
+         Widowed: 60.5% recidivism
+         Difference: -5.5%
+      Female:
+         Non-Widowed: 65.8% recidivism
+         Widowed: 65.5% recidivism
+         Difference: -0.3%
+
+   D. CONCLUSION:
+      Widowed FEMALES have HIGHER recidivism (65.5%) than
+      Widowed MALES (60.5%).
+
+
+4. AGE ANALYSIS
+----------------------------------------
+   Age Range: 18 - 65 years
+   Mean Age: 41.5 years
+   Median Age: 41.0 years
+
+   Age Group Distribution:
+      18-25: 333 (16.7%)
+      26-35: 402 (20.1%)
+      36-45: 465 (23.2%)
+      46-55: 354 (17.7%)
+      56+: 446 (22.3%)
+
+   ** Recidivism Rate by Age Group: **
+      18-25: 216/333 (64.9%)
+      26-35: 289/402 (71.9%)
+      36-45: 283/465 (60.9%)
+      46-55: 234/354 (66.1%)
+      56+: 283/446 (63.5%)
+
+
+5. OFFENSE TYPE ANALYSIS
+----------------------------------------
+   Offense Type Distribution:
+      Assault: 309 (15.4%)
+      Estafa: 306 (15.3%)
+      Robbery: 297 (14.8%)
+      Homicide: 284 (14.2%)
+      Illegal Drugs: 274 (13.7%)
+      Fraud: 274 (13.7%)
+      Theft: 256 (12.8%)
+
+   ** Recidivism Rate by Offense Type (Sorted by Risk): **
+      Theft: 184/256 (71.9%)
+      Estafa: 216/306 (70.6%)
+      Robbery: 201/297 (67.7%)
+      Assault: 203/309 (65.7%)
+      Illegal Drugs: 179/274 (65.3%)
+      Homicide: 165/284 (58.1%)
+      Fraud: 157/274 (57.3%)
+
+
+6. KEY RISK FACTORS ANALYSIS
+----------------------------------------
+
+   Gang Affiliation:
+      No: 1001 (50.0%)
+      Yes: 999 (50.0%)
+      ** Recidivism Rate: **
+         Yes: 656/999 (65.7%)
+         No: 649/1001 (64.8%)
+
+   Homelessness:
+      Yes: 1023 (51.1%)
+      No: 977 (48.9%)
+      ** Recidivism Rate: **
+         No: 647/977 (66.2%)
+         Yes: 658/1023 (64.3%)
+
+   Vocational Training:
+      No: 1041 (52.0%)
+      Yes: 959 (47.9%)
+      ** Recidivism Rate: **
+         No: 689/1041 (66.2%)
+         Yes: 616/959 (64.2%)
+
+   Jail Behavior:
+      Good: 682 (34.1%)
+      Poor: 673 (33.7%)
+      Fair: 645 (32.2%)
+      ** Recidivism Rate: **
+         Fair: 436/645 (67.6%)
+         Good: 453/682 (66.4%)
+         Poor: 416/673 (61.8%)
+
+   Rehab Attitude:
+      Resistant: 672 (33.6%)
+      Willing: 667 (33.4%)
+      Cooperative: 661 (33.1%)
+      ** Recidivism Rate: **
+         Willing: 453/667 (67.9%)
+         Resistant: 449/672 (66.8%)
+         Cooperative: 403/661 (61.0%)
+
+
+================================================================================
+7. TOP 5 SHAP PREDICTORS - DETAILED BREAKDOWN
+================================================================================
+
+   1. RNR_Risk_Score (SHAP Importance: 18.17%)
+      ----------------------------------------
+
+   2. Solitary Time (days) (SHAP Importance: 14.65%)
+      ----------------------------------------
+      Min: 0, Max: 30
+      Mean: 14.71, Median: 15.00
+      Correlation with Recidivism: 0.071
+      Above Median (15.0): 67.4% recidivism
+      Below Median: 63.3% recidivism
+
+   3. Civil Status_Widowed (SHAP Importance: 14.30%)
+      ----------------------------------------
+      Total with 'Widowed': 479 (23.9% of dataset)
+      Recidivism: 303/479 (63.3%)
+      By Gender:
+         Female: 173/264 (65.5%)
+         Male: 130/215 (60.5%)
+
+   4. Infractions Count (SHAP Importance: 13.14%)
+      ----------------------------------------
+      Min: 0, Max: 5
+      Mean: 2.56, Median: 3.00
+      Correlation with Recidivism: 0.015
+      Above Median (3.0): 68.8% recidivism
+      Below Median: 63.4% recidivism
+
+   5. Time Served (yrs) (SHAP Importance: 12.62%)
+      ----------------------------------------
+      Min: 0.5, Max: 14.7
+      Mean: 4.29, Median: 3.30
+      Correlation with Recidivism: -0.011
+      Above Median (3.3): 64.5% recidivism
+      Below Median: 66.0% recidivism
+
+
+8. NUMERICAL FEATURES SUMMARY
+----------------------------------------
+
+   Age:
+      Min: 18, Max: 65
+      Mean: 41.52, Median: 41.00
+      Correlation with Recidivism: -0.023
+
+   Length of Current Sentence (yrs):
+      Min: 1, Max: 15
+      Mean: 7.90, Median: 8.00
+      Correlation with Recidivism: -0.025
+
+   Time Served (yrs):
+      Min: 0.5, Max: 14.7
+      Mean: 4.29, Median: 3.30
+      Correlation with Recidivism: -0.011
+
+   Time to Reoffend (mos):
+      Min: 1.0, Max: 36.0
+      Mean: 17.70, Median: 17.00
+      Correlation with Recidivism: nan
+
+   Infractions Count:
+      Min: 0, Max: 5
+      Mean: 2.56, Median: 3.00
+      Correlation with Recidivism: 0.015
+
+   Solitary Time (days):
+      Min: 0, Max: 30
+      Mean: 14.71, Median: 15.00
+      Correlation with Recidivism: 0.071
+
+   Friends w/ Record:
+      Min: 0, Max: 5
+      Mean: 2.57, Median: 3.00
+      Correlation with Recidivism: 0.058
+
+   Dependents:
+      Min: 0, Max: 5
+      Mean: 2.44, Median: 2.00
+      Correlation with Recidivism: -0.027
+
+   Reoffend Time (mos):
+      Min: 1.0, Max: 36.0
+      Mean: 17.70, Median: 17.00
+      Correlation with Recidivism: nan
+
+
+================================================================================
+                         END OF REPORT
+================================================================================

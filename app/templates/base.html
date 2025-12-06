@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block page_title %}Dashboard{% endblock %} - BJMP RPS</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome (jsDelivr) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- BJMP Official Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bjmp_style.css') }}?v=20562105">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom_overrides.css') }}">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <div class="d-flex align-items-center mb-2">
+                    <img src="{{ url_for('static', filename='images/bjmp_logo.png') }}" alt="BJMP Logo"
+                        style="width: 64px; height: 64px; object-fit: contain; margin-right: 12px;"
+                        onerror="this.style.display='none'">
+                    <div>
+                        <h4 class="sidebar-title">BJMP</h4>
+                        <p class="sidebar-subtitle">Recidivism Prediction</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-menu-item">
+                        <a href="{{ url_for('dashboard') }}"
+                            class="sidebar-menu-link {{ 'active' if request.endpoint == 'dashboard' else '' }}">
+                            <i class="sidebar-menu-icon fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-menu-item">
+                        <a href="{{ url_for('pdl_database') }}"
+                            class="sidebar-menu-link {{ 'active' if request.endpoint == 'pdl_database' else '' }}">
+                            <i class="sidebar-menu-icon fas fa-users"></i>
+                            <span>PDL Database</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-menu-item">
+                        <a href="{{ url_for('assessment_new') }}"
+                            class="sidebar-menu-link {{ 'active' if request.endpoint == 'assessment_new' else '' }}">
+                            <i class="sidebar-menu-icon fas fa-plus-circle"></i>
+                            <span>New Assessment</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-menu-item">
+                        <a href="{{ url_for('analytics') }}"
+                            class="sidebar-menu-link {{ 'active' if request.endpoint == 'analytics' else '' }}">
+                            <i class="sidebar-menu-icon fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-menu-item">
+                        <a href="{{ url_for('reports') }}"
+                            class="sidebar-menu-link {{ 'active' if request.endpoint == 'reports' else '' }}">
+                            <i class="sidebar-menu-icon fas fa-folder-open"></i>
+                            <span>Reports Archive</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-menu-item">
+                        <a href="{{ url_for('predictions') }}"
+                            class="sidebar-menu-link {{ 'active' if request.endpoint == 'predictions' else '' }}">
+                            <i class="sidebar-menu-icon fas fa-file-csv"></i>
+                            <span>Batch Upload</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">{{ session.get('full_name', 'Officer') }}</div>
+                        <div class="user-role">{{ session.get('rank', 'BJMP Personnel') }}</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline mt-2 w-100">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-content">
+                    <div>
+                        <h1 class="page-title">{% block header_title %}Dashboard{% endblock %}</h1>
+                        <p class="page-subtitle">{% block header_subtitle %}Overview and Statistics{% endblock %}</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline" id="mobile-menu-toggle">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
+
+            <footer
+                style="padding: 1.5rem 2rem; text-align: center; color: var(--text-secondary); font-size: 0.875rem; border-top: 1px solid var(--border-color);">
+                <p class="mb-0">Bureau of Jail Management and Penology © 2024 - Recidivism Prediction System v1.0</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main_v2.js') }}"></script>
+
+    <script>
+        // Mobile menu toggle
+        const toggleBtn = document.getElementById('mobile-menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                sidebar.classList.toggle('mobile-open');
+            });
+        }
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>

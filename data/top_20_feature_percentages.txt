@@ -1,0 +1,22 @@
+Top 20 Features Contribution Percentages (based on SHAP)
+============================================================
+Civil Status_Widowed                     15.52%
+Infractions Count                        14.26%
+Homelessness_No                          12.91%
+Rehab Attitude_Cooperative               9.98%
+Jail Behavior Rating_Poor                7.55%
+Job History_Clerk                        6.67%
+Job History_Unemployed                   5.58%
+Vocational Training_No                   4.55%
+Prior Convictions_1 - Theft              3.91%
+Prior Convictions_2 - Assault            3.68%
+Therapy Attendance_No                    3.03%
+Prior Convictions_0 - Assault            2.93%
+Post-Release Housing_Homeless            2.64%
+Civil Status_Separated                   2.56%
+Prior Convictions_0 - Estafa             1.71%
+Prior Convictions_2 - Robbery            1.20%
+Type of Current Offense_Illegal Drugs    1.01%
+Prior Convictions_3 - Illegal Drugs      0.31%
+Prior Convictions_0 - Fraud              0.00%
+Prior Convictions_3 - Theft              0.00%

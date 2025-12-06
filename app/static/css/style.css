@@ -1,0 +1,421 @@
+/* Professional Corporate Design System for Recidivism Prediction System */
+
+:root {
+    /* Professional Color Palette - Clean Corporate */
+    --primary-blue: #0066CC;
+    --primary-blue-dark: #0052A3;
+    --primary-blue-light: #3385D6;
+    --success-green: #28A745;
+    --warning-orange: #FFC107;
+    --danger-red: #DC3545;
+    --gray-50: #F8F9FA;
+    --gray-100: #E9ECEF;
+    --gray-200: #DEE2E6;
+    --gray-300: #CED4DA;
+    --gray-400: #ADB5BD;
+    --gray-500: #6C757D;
+    --gray-600: #495057;
+    --gray-700: #343A40;
+    --gray-800: #212529;
+
+    /* Backgrounds */
+    --bg-body: #FFFFFF;
+    --bg-secondary: #F8F9FA;
+    --bg-tertiary: #E9ECEF;
+
+    /* Text Colors */
+    --text-primary: #212529;
+    --text-secondary: #6C757D;
+    --text-muted: #ADB5BD;
+
+    /* Borders */
+    --border-color: #DEE2E6;
+    --border-radius: 4px;
+
+    /* Shadows - Minimal */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background-color: var(--bg-body);
+}
+
+#wrapper {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-secondary);
+}
+
+/* Sidebar - Professional */
+#sidebar-wrapper {
+    min-height: 100vh;
+    width: 240px;
+    background-color: var(--bg-body);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    transition: margin-left 0.3s ease;
+}
+
+#sidebar-wrapper .sidebar-heading {
+    padding: 1.5rem 1rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+}
+
+#sidebar-wrapper .list-group {
+    width: 100%;
+}
+
+.list-group-item {
+    border: none;
+    border-left: 3px solid transparent;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-secondary);
+    background: transparent;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.list-group-item:hover {
+    background-color: var(--bg-secondary);
+    color: var(--primary-blue);
+}
+
+.list-group-item.active {
+    background-color: var(--bg-secondary);
+    color: var(--primary-blue);
+    border-left-color: var(--primary-blue);
+    font-weight: 600;
+}
+
+#page-content-wrapper {
+    flex: 1;
+    margin-left: 240px;
+    background-color: var(--bg-secondary);
+    min-height: 100vh;
+}
+
+/* Navbar - Clean */
+.navbar {
+    background-color: var(--bg-body) !important;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    padding: 1rem 1.5rem;
+}
+
+.navbar h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Cards - Simple */
+.card {
+    background-color: var(--bg-body);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Buttons - Professional */
+.btn {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.btn-primary {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-blue-dark);
+    border-color: var(--primary-blue-dark);
+}
+
+.btn-success {
+    background-color: var(--success-green);
+    border-color: var(--success-green);
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+.btn-outline-primary {
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+    background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-blue);
+    color: white;
+}
+
+/* Form Controls */
+.form-control,
+.form-select {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.15);
+    outline: none;
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Badges */
+.badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--border-radius);
+}
+
+.bg-success {
+    background-color: var(--success-green) !important;
+}
+
+.bg-warning {
+    background-color: var(--warning-orange) !important;
+    color: var(--text-primary) !important;
+}
+
+.bg-danger {
+    background-color: var(--danger-red) !important;
+}
+
+.bg-primary {
+    background-color: var(--primary-blue) !important;
+}
+
+/* Alerts */
+.alert {
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    border: 1px solid transparent;
+}
+
+.alert-success {
+    background-color: #D4EDDA;
+    border-color: #C3E6CB;
+    color: #155724;
+}
+
+.alert-warning {
+    background-color: #FFF3CD;
+    border-color: #FFEEBA;
+    color: #856404;
+}
+
+.alert-danger {
+    background-color: #F8D7DA;
+    border-color: #F5C6CB;
+    color: #721C24;
+}
+
+.alert-info {
+    background-color: #D1ECF1;
+    border-color: #BEE5EB;
+    color: #0C5460;
+}
+
+/* Stats Cards */
+.border-primary {
+    border-left: 3px solid var(--primary-blue) !important;
+}
+
+.border-success {
+    border-left: 3px solid var(--success-green) !important;
+}
+
+.border-warning {
+    border-left: 3px solid var(--warning-orange) !important;
+}
+
+.border-danger {
+    border-left: 3px solid var(--danger-red) !important;
+}
+
+/* Tables */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.table thead th {
+    background-color: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-color);
+    padding: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.table tbody td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table tbody tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+/* Animations - Minimal */
+.fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Utilities */
+.text-primary {
+    color: var(--primary-blue) !important;
+}
+
+.text-success {
+    color: var(--success-green) !important;
+}
+
+.text-warning {
+    color: #856404 !important;
+}
+
+.text-danger {
+    color: var(--danger-red) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.bg-light {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: -240px;
+    }
+
+    #page-content-wrapper {
+        margin-left: 0;
+    }
+
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: 0;
+    }
+}
+
+/* Remove dark mode and flashy elements */
+.theme-toggle {
+    display: none !important;
+}
+
+/* Dropdown menus */
+.dropdown-menu {
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    border-radius: var(--border-radius);
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    color: var(--text-primary);
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg-secondary);
+    color: var(--primary-blue);
+}
+
+/* Progress bars */
+.progress {
+    height: 1rem;
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+
+.progress-bar {
+    background-color: var(--primary-blue);
+}
+
+/* Scrollbar - Simple */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--gray-400);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-500);
+}

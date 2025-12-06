@@ -1,0 +1,516 @@
+{% extends "base.html" %}
+
+{% block page_title %}Assessment Results{% endblock %}
+{% block header_title %}Assessment Results{% endblock %}
+{% block header_subtitle %}Risk Classification and Rehabilitation Recommendations{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Left Side: Risk Score, Charts, Risk Areas Profile -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header" style="background: #1e3a5f; color: white;">
+                <i class="fas fa-chart-pie me-2"></i>Risk Probability Score
+            </div>
+            <div class="card-body text-center" style="padding: 2rem;">
+                <!-- Risk Gauge -->
+                <div style="position: relative; width: 200px; height: 200px; margin: 0 auto 2rem;">
+                    <svg viewBox="0 0 200 200" style="transform: rotate(-90deg);">
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#E2E8F0" stroke-width="20" />
+                        <circle id="riskCircle" cx="100" cy="100" r="80" fill="none" stroke-width="20"
+                            stroke-dasharray="502.4" stroke-dashoffset="502.4"
+                            style="transition: stroke-dashoffset 1s ease, stroke 0.5s ease;" />
+                    </svg>
+                    <div
+                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                        <div style="font-size: 2.5rem; font-weight: 700;" id="riskPercentage">0%</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">Probability</div>
+                    </div>
+                </div>
+                <!-- Classification Badge -->
+                <div class="mb-4">
+                    <span id="riskBadge" class="badge"
+                        style="font-size: 1.25rem; padding: 0.75rem 1.5rem;">CALCULATING...</span>
+                </div>
+                <!-- Prediction Details -->
+                <div class="row text-start">
+                    <div class="col-6">
+                        <div class="text-secondary mb-1" style="font-size: 0.75rem;">Classification</div>
+                        <div class="fw-bold" id="predictionClass">-</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-secondary mb-1" style="font-size: 0.75rem;">Assessed</div>
+                        <div class="fw-bold" id="assessmentDate">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ML Model Feature Importance Chart -->
+        <div class="card mb-4">
+            <div class="card-header" style="background: #1e3a5f; color: white;">
+                <i class="fas fa-robot me-2"></i>ML Model Breakdown
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="mlFeatureChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- RNR Factors Chart -->
+        <div class="card mb-4">
+            <div class="card-header" style="background: #1e3a5f; color: white;">
+                <i class="fas fa-chart-bar me-2"></i>RNR Score Breakdown
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="rnrFactorsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Areas Profile -->
+        <div class="card mb-4">
+            <div class="card-header" style="background: #1e3a5f; color: white;">
+                <i class="fas fa-spider me-2"></i>Risk Areas Profile
+            </div>
+            <div class="card-body" style="padding: 1.5rem;">
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="rnrRadarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Side: Rehabilitation Plan (scrollable) -->
+    <div class="col-md-6">
+        <!-- Rehabilitation Plan -->
+        <div class="card mb-4" style="position: sticky; top: 80px;">
+            <div class="card-header" style="background: #1e3a5f; color: white;">
+                <i class="fas fa-clipboard-check me-2"></i>Recommended Rehabilitation Plan
+            </div>
+            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                <div id="interventionsList"></div>
+            </div>
+            <div class="card-footer bg-white border-top">
+                <button class="btn w-100 mb-2" onclick="savePlan()"
+                    style="background: #1e3a5f; color: white; border: none;">
+                    <i class="fas fa-save me-2"></i>Save Rehabilitation Plan
+                </button>
+                <a id="pdfReportBtn" href="#" class="btn w-100" target="_blank"
+                    style="background: #c0392b; color: white; border: none;">
+                    <i class="fas fa-file-pdf me-2"></i>Generate PDF Report
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Technical Details Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header" style="background: #5d6d7e; color: white; cursor: pointer;"
+                data-bs-toggle="collapse" data-bs-target="#technicalDetails">
+                <h6 class="mb-0"><i class="fas fa-cog me-2"></i>Technical Details <small class="ms-2">(Click to
+                        expand)</small></h6>
+            </div>
+            <div class="collapse" id="technicalDetails">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Identified Risk Indicators:</strong>
+                            <ul id="debugFeaturesList" class="list-group list-group-flush small"></ul>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Behavioral Risk Factors:</strong>
+                            <ul id="rnrBreakdownList" class="list-group list-group-flush small"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1">Assessment Complete</h6>
+                    <p class="text-secondary mb-0" style="font-size: 0.875rem;">You can now save this assessment or
+                        start a new one</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('assessment_new') }}" class="btn btn-outline-secondary"><i
+                            class="fas fa-plus me-2"></i>New Assessment</a>
+                    <a href="{{ url_for('dashboard') }}" class="btn" style="background: #1e3a5f; color: white;"><i
+                            class="fas fa-home me-2"></i>Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const resultData = sessionStorage.getItem('lastPrediction');
+        if (!resultData) { window.location.href = '/dashboard'; return; }
+
+        try {
+            const result = JSON.parse(resultData);
+            console.log('Result data:', result);
+            displayResults(result);
+        } catch (e) {
+            console.error('Error parsing result:', e);
+        }
+    });
+
+    function displayResults(result) {
+        const probability = Math.round(result.probability * 100);
+        document.getElementById('riskPercentage').textContent = probability + '%';
+
+        const circle = document.getElementById('riskCircle');
+        const circumference = 502.4;
+        const offset = circumference - (probability / 100 * circumference);
+
+        let color = result.risk_level === 'High' ? '#c0392b' : result.risk_level === 'Medium' ? '#d68910' : '#27ae60';
+        setTimeout(() => { circle.style.stroke = color; circle.style.strokeDashoffset = offset; }, 100);
+
+        const badge = document.getElementById('riskBadge');
+        badge.textContent = result.risk_level.toUpperCase() + ' RISK';
+        const badgeColors = { 'High': '#c0392b', 'Medium': '#d68910', 'Low': '#27ae60' };
+        badge.style.background = badgeColors[result.risk_level] || badgeColors['Medium'];
+        badge.style.color = 'white';
+
+        document.getElementById('predictionClass').textContent = result.prediction === 1 ? 'Likely to Reoffend' : 'Not Likely to Reoffend';
+        document.getElementById('assessmentDate').textContent = new Date().toLocaleDateString();
+
+        if (result.prediction_id) {
+            document.getElementById('pdfReportBtn').href = '/report/' + result.prediction_id;
+        }
+
+        // Generate interventions
+        generateInterventions(result);
+
+        // Technical details
+        const debugList = document.getElementById('debugFeaturesList');
+        if (debugList) {
+            debugList.innerHTML = result.triggered_features && result.triggered_features.length > 0
+                ? result.triggered_features.map(f => `<li class="list-group-item py-1">${f}</li>`).join('')
+                : '<li class="list-group-item py-1 text-muted">No specific risk features triggered</li>';
+        }
+
+        const rnrList = document.getElementById('rnrBreakdownList');
+        if (rnrList) {
+            rnrList.innerHTML = result.rnr_breakdown && result.rnr_breakdown.length > 0
+                ? result.rnr_breakdown.map(f => `<li class="list-group-item py-1">${f}</li>`).join('')
+                : '<li class="list-group-item py-1 text-muted">No RNR factors triggered</li>';
+        }
+
+        // Render ML Feature Importance Chart
+        console.log('Feature importance:', result.feature_importance);
+        if (result.feature_importance && result.feature_importance.length > 0) {
+            renderMlFeatureChart(result.feature_importance, result.ml_probability);
+        } else {
+            console.log('No feature importance data, rendering fallback');
+            renderMlFeatureChartFallback(result.ml_probability);
+        }
+
+        // Render RNR Factors Chart
+        console.log('RNR breakdown:', result.rnr_breakdown);
+        if (result.rnr_breakdown && result.rnr_breakdown.length > 0) {
+            renderRnrFactorsChart(result.rnr_breakdown, result.rnr_probability);
+        } else {
+            console.log('No RNR breakdown data');
+        }
+
+        // Render Radar Chart
+        console.log('Category scores:', result.category_scores);
+        if (result.category_scores) {
+            renderRadarChart(result.category_scores);
+        }
+    }
+
+    function renderMlFeatureChart(featureImportance, mlProb) {
+        const ctx = document.getElementById('mlFeatureChart');
+        if (!ctx) return;
+        if (window.mlChart instanceof Chart) window.mlChart.destroy();
+
+        const labels = featureImportance.map(f => f.feature);
+        const data = featureImportance.map(f => f.importance);
+        const backgroundColors = data.map(val => val > 10 ? '#e74c3c' : val > 5 ? '#f39c12' : '#3498db');
+
+        window.mlChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Feature Importance (%)',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderRadius: 4,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: ctx => `Impact: ${ctx.raw}%` } },
+                    title: {
+                        display: true,
+                        text: `ML Prediction: ${Math.round((mlProb || 0) * 100)}%`,
+                        position: 'bottom',
+                        font: { size: 12, weight: 'bold' }
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true, title: { display: true, text: 'Feature Importance (%)' } },
+                    y: { ticks: { font: { size: 9 } } }
+                }
+            }
+        });
+    }
+
+    function renderMlFeatureChartFallback(mlProb) {
+        const ctx = document.getElementById('mlFeatureChart');
+        if (!ctx) return;
+        if (window.mlChart instanceof Chart) window.mlChart.destroy();
+
+        const labels = ['Prior Convictions', 'Infractions Count', 'Time Served', 'Jail Behavior', 'Age'];
+        const data = [20, 15, 12, 10, 8];
+
+        window.mlChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Feature Importance (%)',
+                    data: data,
+                    backgroundColor: '#3498db',
+                    borderRadius: 4,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: `ML Prediction: ${Math.round((mlProb || 0) * 100)}%`,
+                        position: 'bottom',
+                        font: { size: 12, weight: 'bold' }
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true },
+                    y: { ticks: { font: { size: 9 } } }
+                }
+            }
+        });
+    }
+
+    function renderRnrFactorsChart(rnrBreakdown, rnrProb) {
+        const ctx = document.getElementById('rnrFactorsChart');
+        if (!ctx) return;
+        if (window.rnrChart2 instanceof Chart) window.rnrChart2.destroy();
+
+        const labels = [];
+        const data = [];
+
+        rnrBreakdown.forEach(item => {
+            const match = item.match(/\(([+-]?\d+)%\)/);
+            if (match) {
+                const pct = parseInt(match[1]);
+                const label = item.replace(/\s*\([+-]?\d+%\)/, '').trim();
+                labels.push(label);
+                data.push(Math.abs(pct));
+            }
+        });
+
+        const backgroundColors = data.map(val => val >= 15 ? '#c0392b' : val >= 7 ? '#d68910' : '#27ae60');
+
+        window.rnrChart2 = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'RNR Contribution (%)',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderRadius: 4,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: ctx => `+${ctx.raw}% to RNR score` } },
+                    title: {
+                        display: true,
+                        text: `Total RNR Score: ${Math.round((rnrProb || 0) * 100)}%`,
+                        position: 'bottom',
+                        font: { size: 12, weight: 'bold' }
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true, max: 30, title: { display: true, text: 'Contribution (%)' } },
+                    y: { ticks: { font: { size: 9 } } }
+                }
+            }
+        });
+    }
+
+    function renderRadarChart(scores) {
+        const ctx = document.getElementById('rnrRadarChart');
+        if (!ctx) return;
+        if (window.rnrChart instanceof Chart) window.rnrChart.destroy();
+
+        window.rnrChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: Object.keys(scores),
+                datasets: [{
+                    label: 'Risk Profile',
+                    data: Object.values(scores),
+                    fill: true,
+                    backgroundColor: 'rgba(30, 58, 95, 0.3)',
+                    borderColor: '#1e3a5f',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#2c3e50',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        angleLines: { color: 'rgba(0,0,0,0.1)' },
+                        grid: { color: 'rgba(0,0,0,0.1)' },
+                        pointLabels: { font: { size: 11, weight: 'bold' }, color: '#333' },
+                        ticks: { stepSize: 25, font: { size: 9 }, backdropColor: 'transparent' }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    function generateInterventions(result) {
+        let interventions = [];
+        const riskLevel = result.risk_level;
+        const rnrFactors = result.rnr_breakdown || [];
+
+        if (riskLevel === 'High') {
+            interventions.push({ name: 'Intensive Therapeutic Community (TC) Modality', icon: 'fas fa-hospital', priority: 'Critical' });
+            interventions.push({ name: 'Weekly Mental Health Counseling', icon: 'fas fa-brain', priority: 'Critical' });
+            interventions.push({ name: 'Close Supervision (Monthly Check-ins)', icon: 'fas fa-user-shield', priority: 'Critical' });
+        } else if (riskLevel === 'Medium') {
+            interventions.push({ name: 'Moderate Therapeutic Community Participation', icon: 'fas fa-users', priority: 'High' });
+            interventions.push({ name: 'Regular Supervision (Bi-monthly Check-ins)', icon: 'fas fa-clipboard-check', priority: 'High' });
+        } else {
+            interventions.push({ name: 'Basic Reintegration Orientation', icon: 'fas fa-chalkboard-teacher', priority: 'Standard' });
+            interventions.push({ name: 'Standard Supervision (As needed)', icon: 'fas fa-calendar-check', priority: 'Standard' });
+        }
+
+        const factorString = rnrFactors.join(' ').toLowerCase();
+
+        if (factorString.includes('substance') || factorString.includes('drug')) {
+            interventions.push({ name: 'Substance Abuse Treatment Program', icon: 'fas fa-pills', priority: 'High' });
+        }
+        if (factorString.includes('family') || factorString.includes('support')) {
+            interventions.push({ name: 'Family Counseling & Reintegration Support', icon: 'fas fa-home', priority: 'Medium' });
+        }
+        if (factorString.includes('unemploy')) {
+            interventions.push({ name: 'Vocational Training & Livelihood Program', icon: 'fas fa-briefcase', priority: 'High' });
+        }
+        if (factorString.includes('gang')) {
+            interventions.push({ name: 'Gang Disengagement Program', icon: 'fas fa-ban', priority: 'Critical' });
+        }
+        if (factorString.includes('behavior') || factorString.includes('poor')) {
+            interventions.push({ name: 'Behavioral Modification Program', icon: 'fas fa-sync-alt', priority: 'High' });
+        }
+
+        interventions.push({ name: 'Values Formation & Spiritual Development', icon: 'fas fa-pray', priority: 'Standard' });
+
+        const seen = new Set();
+        interventions = interventions.filter(item => {
+            if (seen.has(item.name)) return false;
+            seen.add(item.name);
+            return true;
+        });
+
+        const priorityOrder = { 'Critical': 0, 'High': 1, 'Medium': 2, 'Standard': 3 };
+        interventions.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+        window.autoGeneratedPlan = interventions.map(i => i.name);
+
+        const priorityColors = {
+            'Critical': { bg: '#c0392b', text: 'white' },
+            'High': { bg: '#d68910', text: 'white' },
+            'Medium': { bg: '#2980b9', text: 'white' },
+            'Standard': { bg: '#27ae60', text: 'white' }
+        };
+
+        let html = '<div class="list-group list-group-flush">';
+        interventions.forEach(item => {
+            const colors = priorityColors[item.priority];
+            html += `
+                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                    <div class="d-flex align-items-center">
+                        <i class="${item.icon} me-3" style="color: #1e3a5f; width: 20px;"></i>
+                        <span style="font-size: 0.9rem;">${item.name}</span>
+                    </div>
+                    <span class="badge" style="background: ${colors.bg}; color: ${colors.text}; font-size: 0.7rem; font-weight: normal;">${item.priority}</span>
+                </div>
+            `;
+        });
+        document.getElementById('interventionsList').innerHTML = html + '</div>';
+    }
+
+    function savePlan() {
+        const resultData = sessionStorage.getItem('lastPrediction');
+        if (!resultData) { alert('Error: No prediction data found.'); return; }
+        const result = JSON.parse(resultData);
+        if (!result.prediction_id) { alert('Error: Prediction ID not found.'); return; }
+
+        const plan = window.autoGeneratedPlan || [];
+        if (plan.length === 0) { alert('Error: No rehabilitation plan generated.'); return; }
+
+        fetch('/api/save_plan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prediction_id: result.prediction_id, plan: plan })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Rehabilitation plan saved successfully!');
+                } else {
+                    alert('Error saving plan: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(e => { console.error('Error:', e); alert('An error occurred while saving the plan.'); });
+    }
+</script>
+{% endblock %}

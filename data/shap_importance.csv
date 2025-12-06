@@ -1,0 +1,132 @@
+Feature,SHAP_Importance
+RNR_Risk_Score,0.18174605821111756
+Solitary Time (days),0.14653724257196002
+Civil Status_Widowed,0.14303008579778348
+Infractions Count,0.1313680236800174
+Time Served (yrs),0.12615145493738042
+Homelessness_No,0.11895327730909813
+RNR_Responsivity_Score,0.11118909178340891
+Length of Current Sentence (yrs),0.10219722234143348
+Friends w/ Record,0.10096953600634467
+Rehab Attitude_Cooperative,0.09190811163664679
+Jail Behavior Rating_Poor,0.0695618542192802
+Gender_Female,0.06777160163118344
+Job History_Clerk,0.061488761673866736
+Jail Behavior Rating_Good,0.05787629543468631
+Type of Current Offense_Fraud,0.054540550361847295
+Job History_Unemployed,0.05143995969742484
+Juvenile Records_No,0.05023397440822531
+Family Relationship_Strong,0.04606241737446245
+Juvenile Street Living_No,0.04443105380596694
+Vocational Training_No,0.041895542124257
+Rehab Attitude_Willing,0.04037313030470108
+Family Reunification Intent_No,0.03952280316484831
+Prior Convictions_1 - Theft,0.03602155610682561
+Post-Release Housing_With Family,0.03514291924045994
+Post-Release Housing_Renting,0.03484352417038703
+Dependents,0.03410292808417256
+Prior Convictions_2 - Assault,0.0338578318689878
+Post-Release Housing_Halfway House,0.03250333215255457
+Job History_Odd Jobs,0.03169457450191711
+Gang Affiliation_No,0.030522369212595553
+Age,0.02875448363438227
+Domestic Trauma_No,0.027942103722987003
+Therapy Attendance_No,0.0278916828445281
+Impulsivity_Moderate,0.027529763883557663
+Prior Convictions_0 - Assault,0.026958053870081034
+Remorse_No,0.026742745954948768
+Therapy Attendance_Yes,0.0253880485959707
+Law Belief_Moderate,0.02470112267173339
+Post-Release Housing_Homeless,0.02431079534277061
+Civil Status_Separated,0.023600464273752588
+Aggression_High,0.019602645661874914
+Law Belief_High,0.019546413999254438
+Domestic Trauma_Yes,0.018225223122305158
+Manipulativeness_Moderate,0.01579119731909173
+Prior Convictions_0 - Estafa,0.01574462596795208
+Peer Influence_No,0.014889990862847846
+Aggression_Low,0.013216830502286933
+Aggression_Moderate,0.013051829580859353
+Manipulativeness_High,0.01249213958549391
+Living Before Arrest_With Family,0.012008288266184716
+Family Relationship_Absent,0.011848790846916406
+Peer Type_Antisocial,0.011809227703285827
+Type of Current Offense_Theft,0.011645013043789667
+Post-Release Programs_No,0.011310927848238622
+Rehab Programs_Yes,0.011149114062524668
+Prior Convictions_2 - Robbery,0.011100368452239572
+Prior Convictions_3 - Homicide,0.010741028332405403
+Conflict in Jail_No,0.010555872092375499
+Juvenile Records_Yes,0.010388146912808358
+Religious Activities_No,0.010373888811704311
+Jail Behavior Rating_Fair,0.010132748054051446
+Remorse_Some,0.01011274123378671
+Impulsivity_High,0.009448082077953905
+Type of Current Offense_Illegal Drugs,0.009283740671302745
+Civil Status_Married,0.00915707090455236
+Psych Assessment Result_High,0.008864450408192703
+Family Reunification Intent_Yes,0.008363781094632296
+Family Relationship_Strained,0.008359354791968313
+Gang Affiliation_Yes,0.008302695631158886
+NGO Support_No,0.00825969941602247
+Type of Current Offense_Robbery,0.008211200836307001
+Living Before Arrest_With Peers,0.0080437098605381
+Manipulativeness_Low,0.006970015054582917
+Education in Jail_Yes,0.006958355960417923
+Remorse_Yes,0.006807939199794785
+Type of Current Offense_Assault,0.006670608667246964
+Drug Rehab_No,0.0065799342126960725
+Impulsivity_Low,0.006413684844498399
+RNR_Need_Score,0.006364825235998459
+Psych Assessment Result_Moderate,0.006349096327161707
+Prior Convictions_2 - Theft,0.006223903294480469
+Rehab Programs_No,0.005722196603087645
+NGO Support_Yes,0.005648026668706338
+Psych Assessment Result_Very High,0.005585276392054339
+Jail Duties_No,0.005220202198570775
+Job History_Construction,0.004436783986358274
+Homelessness_Yes,0.004359940000182942
+Education in Jail_No,0.004307979144047433
+Type of Current Offense_Estafa,0.004057941025823049
+Juvenile Street Living_Yes,0.004033820931889622
+Civil Status_Single,0.003903244064752065
+Job After Release_Employed,0.0036722002579452017
+Law Belief_Low,0.003500907830983965
+Prior Convictions_1 - Assault,0.003387932347715438
+Psych Assessment Result_Low,0.0033565949040389714
+Prior Convictions_3 - Illegal Drugs,0.0028867752864597035
+Living Before Arrest_Alone,0.0026644987439185587
+Peer Influence_Yes,0.0023368335383562376
+Jail Duties_Yes,0.002322870426677277
+Post-Release Programs_Yes,0.0021829634312023967
+Job History_Factory,0.0019496604510899989
+Prior Convictions_2 - Homicide,0.0018542692923913977
+Prior Convictions_3 - Estafa,0.001803244328214786
+Type of Current Offense_Homicide,0.0017740541513315158
+Drug Rehab_Yes,0.0017709248332762983
+Job History_Retail,0.0015468422532409639
+Conflict in Jail_Yes,0.0015009568796622433
+Living Before Arrest_Homeless,0.001276666743227253
+Gender_Male,0.0012185360288678342
+Rehab Attitude_Resistant,0.0009538861807636973
+Religious Activities_Yes,0.0009334087537538346
+Prior Convictions_0 - Homicide,0.0006169532616580244
+Prior Convictions_0 - Theft,0.0003637637017848711
+Peer Type_Prosocial,0.00035763531750592056
+Vocational Training_Yes,0.0003342179897003787
+Job After Release_Unemployed,0.0002714178321595994
+Prior Convictions_1 - Fraud,0.0002577676878543779
+Prior Convictions_3 - Assault,0.0
+Prior Convictions_2 - Estafa,0.0
+Prior Convictions_3 - Robbery,0.0
+Prior Convictions_3 - Fraud,0.0
+Prior Convictions_2 - Fraud,0.0
+Prior Convictions_2 - Illegal Drugs,0.0
+Prior Convictions_1 - Homicide,0.0
+Prior Convictions_0 - Robbery,0.0
+Prior Convictions_0 - Fraud,0.0
+Prior Convictions_0 - Illegal Drugs,0.0
+Prior Convictions_1 - Robbery,0.0
+Prior Convictions_1 - Estafa,0.0
+Prior Convictions_3 - Theft,0.0
+Prior Convictions_1 - Illegal Drugs,0.0

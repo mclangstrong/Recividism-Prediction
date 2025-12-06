@@ -1,0 +1,38 @@
+{
+    "Logistic Regression": {
+        "Accuracy": 0.6088709677419355,
+        "Precision": 0.6,
+        "Recall": 0.6532258064516129,
+        "F1 Score": 0.6254826254826255,
+        "AUC-ROC": 0.6316011966701353,
+        "Mean Confidence": 0.27837732445333296,
+        "Std Confidence": 0.1882865361689622
+    },
+    "SVM": {
+        "Accuracy": 0.7116935483870968,
+        "Precision": 0.6981132075471698,
+        "Recall": 0.7459677419354839,
+        "F1 Score": 0.7212475633528265,
+        "AUC-ROC": 0.799899193548387,
+        "Mean Confidence": 0.40324290077427416,
+        "Std Confidence": 0.16659990902209146
+    },
+    "Random Forest": {
+        "Accuracy": 0.7903225806451613,
+        "Precision": 0.7857142857142857,
+        "Recall": 0.7983870967741935,
+        "F1 Score": 0.792,
+        "AUC-ROC": 0.8904217611862643,
+        "Mean Confidence": 0.5905535045328657,
+        "Std Confidence": 0.30330072697289995
+    },
+    "Stacked Ensemble": {
+        "Accuracy": 0.7923387096774194,
+        "Precision": 0.7865612648221344,
+        "Recall": 0.8024193548387096,
+        "F1 Score": 0.7944111776447106,
+        "AUC-ROC": 0.8903811134235172,
+        "Mean Confidence": 0.5862079439547492,
+        "Std Confidence": 0.25218002721930194
+    }
+}

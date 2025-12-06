@@ -1,0 +1,50 @@
+/* Risk Badges - High Visibility - Hardcoded Colors */
+
+/* LOW RISK - Green with White Text */
+.badge-risk-low {
+    background-color: #198754 !important;
+    /* Bootstrap Success Green */
+    color: #ffffff !important;
+    padding: 0.6em 0.85em !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    border: 1px solid #157347 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* MEDIUM RISK - Yellow/Orange with Black Text */
+.badge-risk-medium {
+    background-color: #ffc107 !important;
+    /* Bootstrap Warning Yellow */
+    color: #000000 !important;
+    padding: 0.6em 0.85em !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    border: 1px solid #d39e00 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* HIGH RISK - Red with White Text */
+.badge-risk-high {
+    background-color: #dc3545 !important;
+    /* Bootstrap Danger Red */
+    color: #ffffff !important;
+    padding: 0.6em 0.85em !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    border: 1px solid #b02a37 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Modal Styles */
+.modal-header {
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6 !important;
+    background-color: #f8f9fa !important;
+}

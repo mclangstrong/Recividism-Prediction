@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recidivism Risk Assessment Report - BJMP</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bjmp-primary: #0033A0;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --border-color: #E2E8F0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: #F8F9FA;
+            padding: 2rem;
+        }
+
+        .report-container {
+            max-width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            padding: 15mm;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .letterhead {
+            text-align: center;
+            border-bottom: 3px solid var(--bjmp-primary);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .letterhead h1 {
+            font-size: 16pt;
+            font-weight: 700;
+            color: var(--bjmp-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .letterhead h2 {
+            font-size: 14pt;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .letterhead p {
+            font-size: 9pt;
+            color: var(--text-secondary);
+        }
+
+        .report-title {
+            text-align: center;
+            background: var(--bjmp-primary);
+            color: white;
+            padding: 0.75rem;
+            margin-bottom: 2rem;
+            font-size: 14pt;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .section {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 12pt;
+            font-weight: 700;
+            color: var(--bjmp-primary);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+        }
+
+        .info-label {
+            font-weight: 600;
+            min-width: 140px;
+            color: var(--text-secondary);
+            font-size: 10pt;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-size: 10pt;
+        }
+
+        .risk-box {
+            background: #F8FAFC;
+            border: 2px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+
+        .risk-score {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .risk-score-value {
+            font-size: 36pt;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .risk-score-label {
+            font-size: 10pt;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 12pt;
+            margin-top: 0.5rem;
+        }
+
+        .risk-high {
+            background: #FEE2E2;
+            color: #DC2626;
+            border: 2px solid #DC2626;
+        }
+
+        .risk-medium {
+            background: #FEF3C7;
+            color: #D97706;
+            border: 2px solid #F59E0B;
+        }
+
+        .risk-low {
+            background: #D1FAE5;
+            color: #059669;
+            border: 2px solid #10B981;
+        }
+
+        .intervention-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .intervention-list li {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #F8FAFC;
+            border-left: 3px solid var(--bjmp-primary);
+        }
+
+        .footer {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 9pt;
+            color: var(--text-secondary);
+        }
+
+        .signature-area {
+            margin-top: 3rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+        }
+
+        .signature-block {
+            text-align: center;
+        }
+
+        .signature-line {
+            border-top: 1px solid var(--text-primary);
+            margin-top: 2rem;
+            padding-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        .signature-title {
+            font-size: 9pt;
+            color: var(--text-secondary);
+        }
+
+        .floating-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bjmp-primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .floating-btn:hover {
+            background: #002678;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .report-container {
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .floating-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="report-container">
+        <!-- BJMP Letterhead -->
+        <div class="letterhead">
+            <h1>BUREAU OF JAIL MANAGEMENT AND PENOLOGY</h1>
+            <h2>Sta Cruz District Jail - Sta. Cruz, Laguna</h2>
+            <p> 79MW+6J9, Bay side, Sta. Cruz, Laguna | Tel: (049) 501-XXXX | Email: bjmp.stacruz@bjmp.gov.ph</p>
+        </div>
+
+        <!-- Report Title -->
+        <div class="report-title">
+            RECIDIVISM RISK ASSESSMENT REPORT
+        </div>
+
+        <!-- PDL Information Section -->
+        <div class="section">
+            <div class="section-title">Person Deprived of Liberty (PDL) Information</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Full Name:</span>
+                    <span class="info-value" id="pdlName">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">PDL ID:</span>
+                    <span class="info-value" id="pdlId">PDL-2024-XXXX</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Age / Gender:</span>
+                    <span class="info-value"><span id="pdlAge">-</span> / <span id="pdlGender">-</span></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Index Offense:</span>
+                    <span class="info-value" id="pdlOffense">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Assessment Date:</span>
+                    <span class="info-value" id="assessDate">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Assessed By:</span>
+                    <span class="info-value">Admin Officer, BJMP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Assessment Results -->
+        <div class="section">
+            <div class="section-title">Risk Assessment Results</div>
+            <div class="risk-box">
+                <div class="risk-score">
+                    <div class="risk-score-value" id="riskScore">-</div>
+                    <div class="risk-score-label">Recidivism Probability</div>
+                    <div>
+                        <span class="risk-badge" id="riskClass">-</span>
+                    </div>
+                </div>
+                <p style="text-align: center; color: var(--text-secondary); font-size: 10pt; margin-top: 1rem;">
+                    Classification: <strong id="classification">-</strong>
+                </p>
+            </div>
+            <p style="font-size: 10pt; color: var(--text-secondary); margin-top: 1rem;">
+                <strong>Interpretation:</strong> This assessment indicates the probability of the PDL committing another
+                offense within two years of release based on validated risk factors and machine learning analysis
+                (AUC-ROC: 89%).
+            </p>
+        </div>
+
+        <!-- Reintegration Plan -->
+        <div class="section">
+            <div class="section-title">Recommended Reintegration Plan (RNR Model)</div>
+            <p style="font-size: 10pt; margin-bottom: 1rem;">
+                Based on the Risk-Need-Responsivity (RNR) framework, the following interventions are recommended:
+            </p>
+            <ul class="intervention-list" id="interventionList">
+                <!-- Populated by JavaScript -->
+            </ul>
+        </div>
+
+        <!-- Supervision Recommendations -->
+        <div class="section">
+            <div class="section-title">Post-Release Supervision Recommendations</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Supervision Level:</span>
+                    <span class="info-value" id="supervisionLevel">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Check-in Frequency:</span>
+                    <span class="info-value" id="checkinFreq">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Case Manager Assignment:</span>
+                    <span class="info-value">Required</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Community Notification:</span>
+                    <span class="info-value" id="notification">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signature Area -->
+        <div class="signature-area">
+            <div class="signature-block">
+                <div class="signature-line">
+                    Officer Name
+                </div>
+                <div class="signature-title">Assessing Officer, BJMP Sta. Cruz</div>
+            </div>
+            <div class="signature-block">
+                <div class="signature-line">
+                    Senior Officer Name
+                </div>
+                <div class="signature-title">Chief, BJMP Sta. Cruz</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Confidentiality Notice:</strong> This document contains confidential information intended only
+                for authorized BJMP personnel and relevant LGU/parole officers. Unauthorized disclosure, copying,
+                distribution, or use of this information is strictly prohibited.</p>
+            <p style="margin-top: 0.5rem;">Generated by BJMP Recidivism Prediction System | Report ID: RPT-{{ timestamp
+                }} | Page 1 of 1</p>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button class="floating-btn" onclick="window.print()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+            <path d="M6 14h12v8H6z" />
+        </svg>
+        Print / Save as PDF
+    </button>
+
+    <script>
+        // Load data from session storage or backend
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if data was passed from backend (via Jinja)
+            const backendData = {{ data| tojson | safe if data else 'null'
+        }};
+
+        if (backendData) {
+            populateReport(backendData);
+        } else {
+            // Fallback to session storage
+            const resultData = sessionStorage.getItem('lastPrediction');
+
+            if (!resultData) {
+                alert('No assessment data found. Please complete an assessment first.');
+                window.location.href = '/dashboard';
+                return;
+            }
+
+            const result = JSON.parse(resultData);
+            populateReport(result);
+        }
+        });
+
+        function populateReport(data) {
+            // PDL Info
+            document.getElementById('pdlName').textContent = data.name || 'N/A';
+            document.getElementById('pdlId').textContent = data.pdl_id || 'N/A';
+            document.getElementById('pdlAge').textContent = data.age || 'N/A';
+            document.getElementById('pdlGender').textContent = data.gender || 'N/A';
+            document.getElementById('pdlOffense').textContent = data.offense || 'N/A';
+            document.getElementById('assessDate').textContent = new Date().toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            // Risk Score
+            const probability = Math.round(data.probability * 100);
+            document.getElementById('riskScore').textContent = probability + '%';
+            document.getElementById('classification').textContent =
+                data.prediction === 1 ? 'Likely to Reoffend' : 'Not Likely to Reoffend';
+
+            // Risk Badge
+            const badge = document.getElementById('riskClass');
+            badge.textContent = data.risk_level.toUpperCase() + ' RISK';
+            badge.className = 'risk-badge risk-' + data.risk_level.toLowerCase();
+
+            // Interventions
+            let interventions = [];
+            if (data.plan && Array.isArray(data.plan) && data.plan.length > 0) {
+                interventions = data.plan;
+            } else {
+                interventions = generateInterventions(data.risk_level);
+            }
+
+            let html = '';
+            interventions.forEach(item => {
+                html += `<li>${item}</li>`;
+            });
+            document.getElementById('interventionList').innerHTML = html;
+
+            // Supervision
+            const supervision = {
+                'High': { level: 'Enhanced / Intensive', frequency: 'Monthly check-ins', notify: 'Yes, required' },
+                'Medium': { level: 'Moderate', frequency: 'Bi-monthly check-ins', notify: 'As needed' },
+                'Low': { level: 'Standard / Minimal', frequency: 'Quarterly or as needed', notify: 'Not required' }
+            };
+
+            const sup = supervision[data.risk_level] || supervision['Medium'];
+            document.getElementById('supervisionLevel').textContent = sup.level;
+            document.getElementById('checkinFreq').textContent = sup.frequency;
+            document.getElementById('notification').textContent = sup.notify;
+        }
+
+        function generateInterventions(riskLevel) {
+            const interventions = {
+                'High': [
+                    'Enrollment in Intensive Therapeutic Community (TC) Modality Program',
+                    'Weekly Mental Health and Behavioral Counseling Sessions',
+                    'Comprehensive Vocational Training and Livelihood Skills Development',
+                    'Family Reintegration Support and Counseling (minimum 4 sessions)',
+                    'Substance Abuse Treatment Program (if applicable)',
+                    'Post-Release Employment Assistance and Monitoring'
+                ],
+                'Medium': [
+                    'Moderate Therapeutic Community Participation',
+                    'Bi-weekly Counseling and Behavioral Support Sessions',
+                    'Livelihood Skills Training and Job Readiness Program',
+                    'Family Counseling and Support (minimum 2 sessions)',
+                    'Community-Based Supervision and Support'
+                ],
+                'Low': [
+                    'Basic Community Reintegration Orientation',
+                    'Optional Skills Enhancement and Livelihood Training',
+                    'Standard Post-Release Monitoring',
+                    'Access to Community Support Resources'
+                ]
+            };
+
+            return interventions[riskLevel] || interventions['Medium'];
+        }
+    </script>
+</body>
+
+</html>

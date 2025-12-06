@@ -1,0 +1,31 @@
+Model Type: Random Forest
+Best Params: {'clf__max_depth': None, 'clf__max_features': 'sqrt', 'clf__min_samples_leaf': 1, 'clf__min_samples_split': 2, 'clf__n_estimators': 500}
+
+--- Test Set Metrics ---
+Accuracy  : 0.7903
+AUC: 0.8900
+Precision: 0.7857
+Recall: 0.7984
+F1-Score: 0.7920
+
+Mean Confidence: 0.5979
+Std Confidence: 0.2996
+
+Confusion Matrix:
+[[194  54]
+ [ 50 198]]
+
+Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.80      0.78      0.79       248
+           1       0.79      0.80      0.79       248
+
+    accuracy                           0.79       496
+   macro avg       0.79      0.79      0.79       496
+weighted avg       0.79      0.79      0.79       496
+
+
+--- Best Pipeline Steps ---
+Step: smote -> SMOTE
+Step: clf -> RandomForestClassifier

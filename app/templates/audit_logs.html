@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block page_title %}Audit Logs{% endblock %}
+{% block header_title %}Audit Logs{% endblock %}
+{% block header_subtitle %}System activity and compliance tracking{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label">Action Type</label>
+                <select class="form-select" id="actionTypeFilter">
+                    <option value="">All Actions</option>
+                    <option value="prediction">Predictions</option>
+                    <option value="plan_update">Plan Updates</option>
+                    <option value="export">Exports</option>
+                    <option value="login">Logins</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-control" id="usernameFilter" placeholder="Filter by username">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-primary w-100" onclick="loadAuditLogs()">
+                    <i class="fas fa-search me-2"></i>Apply Filters
+                </button>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-outline" onclick="exportAuditLogs()">
+                    <i class="fas fa-download me-2"></i>Export CSV
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Audit Logs Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-clipboard-list me-2"></i>Audit Trail</span>
+        <span class="badge bg-primary" id="logCount">0 records</span>
+    </div>
+    <div class="card-body" style="padding: 0; overflow-x: auto;">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Description</th>
+                    <th>PDL ID</th>
+                    <th>Model Version</th>
+                </tr>
+            </thead>
+            <tbody id="auditTableBody">
+                <tr>
+                    <td colspan="6" class="text-center" style="padding: 3rem;">
+                        <div class="spinner"></div>
+                        <p class="text-secondary mt-2">Loading audit logs...</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <button class="btn btn-sm btn-outline" id="prevBtn" onclick="previousPage()" disabled>
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <span class="mx-3" id="pageInfo">Page 1</span>
+                <button class="btn btn-sm btn-outline" id="nextBtn" onclick="nextPage()">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentPage = 1;
+    let totalLogs = 0;
+    const perPage = 50;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadAuditLogs();
+    });
+
+    function loadAuditLogs() {
+        const actionType = document.getElementById('actionTypeFilter').value;
+        const username = document.getElementById('usernameFilter').value;
+
+        const params = new URLSearchParams();
+        if (actionType) params.append('action_type', actionType);
+        if (username) params.append('username', username);
+        params.append('page', currentPage);
+        params.append('per_page', perPage);
+
+        fetch(`/api/audit-logs?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                totalLogs = data.total || 0;
+                displayAuditLogs(data.logs || []);
+                updatePagination();
+                document.getElementById('logCount').textContent = `${totalLogs} record${totalLogs !== 1 ? 's' : ''}`;
+            })
+            .catch(error => {
+                console.error('Error loading audit logs:', error);
+                displayEmptyState('Error loading audit logs');
+            });
+    }
+
+    function displayAuditLogs(logs) {
+        const tbody = document.getElementById('auditTableBody');
+
+        if (!logs || logs.length === 0) {
+            displayEmptyState('No audit logs found');
+            return;
+        }
+
+        let html = '';
+        logs.forEach(log => {
+            const timestamp = log.timestamp ? new Date(log.timestamp).toLocaleString() : 'N/A';
+            const actionBadge = getActionBadge(log.action_type);
+
+            html += `
+            <tr>
+                <td style="white-space: nowrap;">${timestamp}</td>
+                <td>${log.username || 'System'}</td>
+                <td>${actionBadge}</td>
+                <td>${log.action_description || 'N/A'}</td>
+                <td>${log.pdl_id || '-'}</td>
+                <td>${log.model_version || '-'}</td>
+            </tr>
+        `;
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    function getActionBadge(actionType) {
+        const badges = {
+            'prediction': '<span class="badge bg-primary">Prediction</span>',
+            'plan_update': '<span class="badge bg-warning">Plan Update</span>',
+            'export': '<span class="badge bg-info">Export</span>',
+            'login': '<span class="badge bg-success">Login</span>'
+        };
+        return badges[actionType] || `<span class="badge bg-secondary">${actionType}</span>`;
+    }
+
+    function displayEmptyState(message) {
+        const tbody = document.getElementById('auditTableBody');
+        tbody.innerHTML = `
+        <tr>
+            <td colspan="6" class="text-center" style="padding: 3rem;">
+                <i class="fas fa-clipboard-list fa-3x mb-3 d-block" style="opacity: 0.2;"></i>
+                <p class="text-secondary">${message}</p>
+            </td>
+        </tr>
+    `;
+    }
+
+    function updatePagination() {
+        const totalPages = Math.ceil(totalLogs / perPage);
+        document.getElementById('prevBtn').disabled = currentPage === 1;
+        document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
+    }
+
+    function previousPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadAuditLogs();
+        }
+    }
+
+    function nextPage() {
+        const totalPages = Math.ceil(totalLogs / perPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadAuditLogs();
+        }
+    }
+
+    function exportAuditLogs() {
+        alert('Audit log export functionality - Coming soon!');
+    }
+</script>
+{% endblock %}

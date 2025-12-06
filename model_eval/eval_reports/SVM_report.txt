@@ -1,0 +1,32 @@
+Model Type: SVM
+Best Params: {'clf__C': 10, 'clf__gamma': 'scale'}
+
+--- Test Set Metrics ---
+Accuracy  : 0.7117
+AUC: 0.7999
+Precision: 0.6981
+Recall: 0.7460
+F1-Score: 0.7212
+
+Mean Confidence: 0.4032
+Std Confidence: 0.1666
+
+Confusion Matrix:
+[[168  80]
+ [ 63 185]]
+
+Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.73      0.68      0.70       248
+           1       0.70      0.75      0.72       248
+
+    accuracy                           0.71       496
+   macro avg       0.71      0.71      0.71       496
+weighted avg       0.71      0.71      0.71       496
+
+
+--- Best Pipeline Steps ---
+Step: smote -> SMOTE
+Step: scaler -> StandardScaler
+Step: clf -> SVC

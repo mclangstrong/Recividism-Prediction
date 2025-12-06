@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block header_title %}Dashboard{% endblock %}
+{% block header_subtitle %}System Overview and Real-Time Statistics{% endblock %}
+
+{% block content %}
+<!-- Top Statistics Cards with Call-to-Action -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div></div>
+    <a href="{{ url_for('assessment_new') }}" class="btn btn-primary"
+        style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+        <i class="fas fa-plus-circle me-2" style="font-size: 0.875rem;"></i>New Assessment
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-card-body">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">Total PDLs Assessed</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-card-body">
+                <div class="stat-value" id="lowCount" style="color: var(--risk-low);">0</div>
+                <div class="stat-label">Low Risk</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="stat-card-body">
+                <div class="stat-value" id="mediumCount" style="color: var(--risk-medium);">0</div>
+                <div class="stat-label">Medium Risk</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon danger">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-card-body">
+                <div class="stat-value" id="highCount" style="color: var(--risk-high);">0</div>
+                <div class="stat-label">High Risk Alert</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Distribution & High-Risk Watchlist -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <div><i class="fas fa-chart-pie me-2"></i>Risk Distribution</div>
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 180px;">
+                    <canvas id="riskDistributionChart"></canvas>
+                </div>
+                <div class="d-flex justify-content-center gap-3 mt-3">
+                    <div class="d-flex align-items-center">
+                        <div
+                            style="width: 12px; height: 12px; background: var(--risk-low); border-radius: 50%; margin-right: 0.5rem;">
+                        </div>
+                        <span class="text-secondary" style="font-size: 0.875rem;">Low (<span
+                                id="lowRiskPct">0</span>%)</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div
+                            style="width: 12px; height: 12px; background: var(--risk-medium); border-radius: 50%; margin-right: 0.5rem;">
+                        </div>
+                        <span class="text-secondary" style="font-size: 0.875rem;">Medium (<span
+                                id="mediumRiskPct">0</span>%)</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div
+                            style="width: 12px; height: 12px; background: var(--risk-high); border-radius: 50%; margin-right: 0.5rem;">
+                        </div>
+                        <span class="text-secondary" style="font-size: 0.875rem;">High (<span
+                                id="highRiskPct">0</span>%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <div><i class="fas fa-exclamation-triangle me-2"></i>High-Risk Watchlist</div>
+            </div>
+            <div class="card-body" style="max-height: 240px; overflow-y: auto;">
+                <div id="highRiskWatchlist">
+                    <div class="text-center text-secondary py-3">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Feed -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <div><i class="fas fa-clock me-2"></i>Recent Activity</div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table activity-table" id="recentActivityTable">
+                        <thead>
+                            <tr>
+                                <th>PDL Name</th>
+                                <th>Date Assessed</th>
+                                <th>Assessed By</th>
+                                <th>Risk Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4" class="text-center text-secondary py-4">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Fetch and display real statistics
+    document.addEventListener('DOMContentLoaded', function () {
+        // Fetch statistics for stat cards and risk distribution
+        fetch('/api/statistics')
+            .then(response => response.json())
+            .then(data => {
+                // Update stat cards
+                document.getElementById('totalCount').textContent = data.total;
+                document.getElementById('lowCount').textContent = data.low.count;
+                document.getElementById('mediumCount').textContent = data.medium.count;
+                document.getElementById('highCount').textContent = data.high.count;
+                document.getElementById('lowRiskPct').textContent = data.low.percentage;
+                document.getElementById('mediumRiskPct').textContent = data.medium.percentage;
+                document.getElementById('highRiskPct').textContent = data.high.percentage;
+
+                // Risk Distribution Chart
+                new Chart(document.getElementById('riskDistributionChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+                        datasets: [{
+                            data: [data.low.count, data.medium.count, data.high.count],
+                            backgroundColor: ['#10B981', '#F59E0B', '#DC2626'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        cutout: '70%'
+                    }
+                });
+            });
+
+        // Fetch and display high-risk watchlist
+        fetch('/api/high_risk_pdls?limit=10')
+            .then(response => response.json())
+            .then(data => {
+                const watchlistDiv = document.getElementById('highRiskWatchlist');
+
+                if (data.length === 0) {
+                    watchlistDiv.innerHTML = `
+                        <div class="text-center text-secondary py-4">
+                            <i class="fas fa-check-circle" style="font-size: 2rem;"></i>
+                            <p class="mt-2 mb-0">No high-risk cases detected</p>
+                        </div>
+                    `;
+                } else {
+                    let html = '<div class="watchlist-container">';
+                    data.forEach(item => {
+                        html += `
+                            <div class="watchlist-item">
+                                <div class="watchlist-info">
+                                    <div class="watchlist-name">${item.name}</div>
+                                    <div class="watchlist-date">${item.assessment_date}</div>
+                                </div>
+                                <div class="watchlist-actions">
+                                    <span class="risk-badge risk-high">${item.risk_score}%</span>
+                                    <a href="/pdl-database?search=${encodeURIComponent(item.name)}" class="btn btn-sm btn-outline">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    watchlistDiv.innerHTML = html;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching high-risk PDLs:', error);
+                document.getElementById('highRiskWatchlist').innerHTML = `
+                    <div class="text-center text-danger py-4">
+                        <i class="fas fa-exclamation-circle"></i> Error loading data
+                    </div>
+                `;
+            });
+
+        // Fetch and display recent activity
+        fetch('/api/recent_assessments?limit=10')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.querySelector('#recentActivityTable tbody');
+
+                if (data.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="text-center text-secondary py-4">
+                                No recent assessments
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    let html = '';
+                    data.forEach(item => {
+                        const riskClass = `risk-${item.risk_level.toLowerCase()}`;
+                        html += `
+                            <tr>
+                                <td><strong>${item.pdl_name}</strong></td>
+                                <td>${item.date_assessed}</td>
+                                <td>${item.assessed_by}</td>
+                                <td><span class="risk-badge ${riskClass}">${item.risk_level}</span></td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching recent activity:', error);
+                document.querySelector('#recentActivityTable tbody').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-danger py-4">
+                            <i class="fas fa-exclamation-circle"></i> Error loading data
+                        </td>
+                    </tr>
+                `;
+            });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+
+{% block page_title %}Analytics{% endblock %}
+{% block header_title %}Analytics Dashboard{% endblock %}
+{% block header_subtitle %}Comprehensive system analytics and trend analysis{% endblock %}
+
+{% block content %}
+<!-- Date Range Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Date Range</label>
+                <select class="form-select" id="dateRange">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="365">Last Year</option>
+                    <option value="all">All Time</option>
+                </select>
+            </div>
+            <div class="col-md-8 text-end">
+                <button class="btn btn-outline" onclick="exportData('csv')">
+                    <i class="fas fa-file-csv me-2"></i>Export CSV
+                </button>
+                <button class="btn btn-outline" onclick="exportData('pdf')">
+                    <i class="fas fa-file-pdf me-2"></i>Export PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-card-body">
+                <div class="stat-value" id="totalAssessments">0</div>
+                <div class="stat-label">Total PDLs Assessed</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-card-body">
+                <div class="stat-value text-success" id="lowRiskCount">0</div>
+                <div class="stat-label">Low Risk</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="stat-card-body">
+                <div class="stat-value text-warning" id="mediumRiskCount">0</div>
+                <div class="stat-label">Medium Risk</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon danger">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-card-body">
+                <div class="stat-value text-danger" id="highRiskCount">0</div>
+                <div class="stat-label">High Risk Alert</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-area me-2"></i>Assessment Trends Over Time
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 300px;">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-pie me-2"></i>Risk Distribution
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 300px;">
+                    <canvas id="riskPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-bar me-2"></i>Monthly Assessment Volume
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 300px;">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-exclamation-circle me-2"></i>Top Risk Factors
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 300px;">
+                    <canvas id="riskFactorsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model Performance Tracking -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-brain me-2"></i>Model Performance Metrics
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div style="position: relative; height: 250px;">
+                            <canvas id="modelMetricsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th class="text-end">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Accuracy</td>
+                                    <td class="text-end fw-bold">79.03%</td>
+                                </tr>
+                                <tr>
+                                    <td>Precision</td>
+                                    <td class="text-end fw-bold">78.57%</td>
+                                </tr>
+                                <tr>
+                                    <td>Recall</td>
+                                    <td class="text-end fw-bold">79.84%</td>
+                                </tr>
+                                <tr>
+                                    <td>F1-Score</td>
+                                    <td class="text-end fw-bold">79.20%</td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td><strong>AUC-ROC</strong></td>
+                                    <td class="text-end fw-bold">89.00%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Fetch analytics data on load
+    document.addEventListener('DOMContentLoaded', function () {
+        loadAnalytics();
+    });
+
+    // Date range change handler
+    document.getElementById('dateRange').addEventListener('change', function () {
+        loadAnalytics();
+    });
+
+    function loadAnalytics() {
+        // Fetch statistics
+        fetch('/api/statistics')
+            .then(response => response.json())
+            .then(data => {
+                // Update Key Metrics
+                document.getElementById('totalAssessments').textContent = data.total;
+                document.getElementById('lowRiskCount').textContent = data.low.count;
+                document.getElementById('mediumRiskCount').textContent = data.medium.count;
+                document.getElementById('highRiskCount').textContent = data.high.count;
+
+                // Fetch model info separately
+                fetchModelInfo();
+
+                // Create/Update Charts with Real Data
+                createTrendsChart(data.trends);
+                createRiskPieChart(data);
+                createMonthlyChart(data.monthly);
+                createRiskFactorsChart(data.risk_factors);
+                createModelMetricsChart();
+            })
+            .catch(error => console.error('Error loading analytics:', error));
+    }
+
+    function fetchModelInfo() {
+        fetch('/api/model_info')
+            .then(response => response.json())
+            .then(info => {
+                // We are not displaying accuracy in the top cards anymore, 
+                // but it's still used in the table/radar chart if dynamically updated there.
+                // The table is currently hardcoded in HTML, so this might be redundant unless we update the table too.
+                // For now, we'll leave it as the table is static HTML.
+            })
+            .catch(err => console.error('Error loading model info:', err));
+    }
+
+    function createTrendsChart(trendsData) {
+        const ctx = document.getElementById('trendsChart');
+        if (window.trendsChartInstance) {
+            window.trendsChartInstance.destroy();
+        }
+
+        window.trendsChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: trendsData.labels,
+                datasets: [{
+                    label: 'High Risk',
+                    data: trendsData.high,
+                    borderColor: '#E4002B', // Pantone 185 C
+                    backgroundColor: 'rgba(228, 0, 43, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Medium Risk',
+                    data: trendsData.medium,
+                    borderColor: '#FFCD00', // Pantone 116 C
+                    backgroundColor: 'rgba(255, 205, 0, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Low Risk',
+                    data: trendsData.low,
+                    borderColor: '#059669', // Emerald
+                    backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    function createRiskPieChart(data) {
+        const ctx = document.getElementById('riskPieChart');
+        if (window.riskPieChartInstance) window.riskPieChartInstance.destroy();
+
+        window.riskPieChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Low', 'Medium', 'High'],
+                datasets: [{
+                    data: [data.low.count, data.medium.count, data.high.count],
+                    backgroundColor: [
+                        '#059669', // Low
+                        '#FFCD00', // Medium (Pantone 116 C)
+                        '#E4002B'  // High (Pantone 185 C)
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    function createMonthlyChart(monthlyData) {
+        const ctx = document.getElementById('monthlyChart');
+        if (window.monthlyChartInstance) window.monthlyChartInstance.destroy();
+
+        window.monthlyChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: monthlyData.labels,
+                datasets: [{
+                    label: 'Assessments',
+                    data: monthlyData.data,
+                    backgroundColor: '#10069F' // Pantone 072 C
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    function createRiskFactorsChart(riskData) {
+        const ctx = document.getElementById('riskFactorsChart');
+        if (window.riskFactorsChartInstance) window.riskFactorsChartInstance.destroy();
+
+        window.riskFactorsChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: riskData.labels,
+                datasets: [{
+                    label: 'Count',
+                    data: riskData.data,
+                    backgroundColor: '#10069F' // Pantone 072 C
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    function createModelMetricsChart() {
+        const ctx = document.getElementById('modelMetricsChart');
+        if (window.modelMetricsChartInstance) window.modelMetricsChartInstance.destroy();
+
+        window.modelMetricsChartInstance = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'AUC-ROC'],
+                datasets: [{
+                    label: 'Random Forest',
+                    data: [79.03, 78.57, 79.84, 79.20, 89.00],
+                    borderColor: '#10069F', // Pantone 072 C
+                    backgroundColor: 'rgba(16, 6, 159, 0.2)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+
+    function exportData(format) {
+        alert(`Exporting analytics data in ${format.toUpperCase()} format...`);
+    }
+</script>
+{% endblock %}

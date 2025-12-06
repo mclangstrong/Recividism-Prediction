@@ -1,0 +1,575 @@
+{% extends "base.html" %}
+
+{% block page_title %}New Assessment{% endblock %}
+{% block header_title %}New Assessment Wizard{% endblock %}
+{% block header_subtitle %}Step-by-step risk assessment for PDL{% endblock %}
+
+{% block content %}
+<!-- Assessment Wizard Steps -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start" style="max-width: 600px; margin: 0 auto;">
+            <div class="d-flex align-items-center">
+                <div class="stepper-step active" id="step1-indicator">
+                    <div class="stepper-number">1</div>
+                    <div class="stepper-label">Profile</div>
+                </div>
+            </div>
+            <div class="stepper-line" id="line1"></div>
+            <div class="d-flex align-items-center">
+                <div class="stepper-step" id="step2-indicator">
+                    <div class="stepper-number">2</div>
+                    <div class="stepper-label">Needs</div>
+                </div>
+            </div>
+            <div class="stepper-line" id="line2"></div>
+            <div class="d-flex align-items-center">
+                <div class="stepper-step" id="step3-indicator">
+                    <div class="stepper-number">3</div>
+                    <div class="stepper-label">Review</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay"
+    style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="text-center">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+        <p class="mt-3 text-primary fw-bold">Loading PDL data for reassessment...</p>
+    </div>
+</div>
+
+<!-- Step Content -->
+<div class="card">
+    <div class="card-body">
+        <form id="assessmentForm">
+            <!-- Step 1: Static Profile -->
+            <div id="step1" class="wizard-step active">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0">Step 1: Static Profile Information</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary d-none" id="editStep1Btn">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </button>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="Name" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Age <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="Age" min="18" max="100" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Gender <span class="text-danger">*</span></label>
+                            <select class="form-select" name="Gender" required>
+                                <option value="">Select...</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Civil Status</label>
+                            <select class="form-select" name="Civil Status">
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                                <option value="Widowed">Widowed</option>
+                                <option value="Separated">Separated</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Educational Attainment</label>
+                            <select class="form-select" name="Educational Attainment">
+                                <option value="None">None</option>
+                                <option value="Elementary">Elementary</option>
+                                <option value="High School">High School</option>
+                                <option value="College">College</option>
+                                <option value="Vocational">Vocational</option>
+                                <option value="Graduate">Graduate</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Prior Convictions (Count)</label>
+                            <input type="number" class="form-control" name="Prior_Convictions" min="0" value="0">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Index Offense</label>
+                            <select class="form-select" name="Offense Type">
+                                <option value="Theft">Theft</option>
+                                <option value="Robbery">Robbery</option>
+                                <option value="Homicide">Homicide</option>
+                                <option value="Assault">Assault</option>
+                                <option value="Illegal Drugs">Illegal Drugs</option>
+                                <option value="Estafa">Estafa</option>
+                                <option value="Fraud">Fraud</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Juvenile Records <span
+                                    class="text-muted">(Optional)</span></label>
+                            <select class="form-select" name="Juvenile Records">
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Infractions Count <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="Infractions Count" min="0" value="0"
+                                required>
+                            <small class="form-text text-muted">Number of disciplinary infractions in jail</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Religion</label>
+                            <select class="form-select" name="Religion">
+                                <option value="Catholic">Catholic</option>
+                                <option value="Protestant">Protestant</option>
+                                <option value="Islam">Islam</option>
+                                <option value="Other">Other</option>
+                                <option value="None">None</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Length of Current Sentence (yrs) <span
+                                    class="text-muted">(Optional)</span></label>
+                            <input type="number" class="form-control" name="Length of Current Sentence (yrs)" min="0"
+                                step="0.1" value="0">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Time Served (years) <span
+                                    class="text-muted">(Optional)</span></label>
+                            <input type="number" class="form-control" name="Time Served (years)" min="0" step="0.1"
+                                value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="button" class="btn btn-primary" onclick="nextStep()">
+                        Next <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Criminogenic Needs -->
+            <div id="step2" class="wizard-step" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0">Step 2: Criminogenic Needs & Risk Factors</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary d-none" id="editStep2Btn">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </button>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Substance Abuse History</label>
+                            <select class="form-select" name="Substance Abuse History">
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Mental Health Issues</label>
+                            <select class="form-select" name="Mental Health Issues">
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Family Support</label>
+                            <select class="form-select" name="Family Support">
+                                <option value="Strong">Strong</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Poor">Poor</option>
+                                <option value="Absent">Absent</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Gang Affiliation</label>
+                            <select class="form-select" name="Gang Affiliation">
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Employment Status</label>
+                            <select class="form-select" name="Employment Status">
+                                <option value="Employed">Employed</option>
+                                <option value="Unemployed">Unemployed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Program Participation</label>
+                            <select class="form-select" name="Program_Participation">
+                                <option value="No">None</option>
+                                <option value="Yes">Active</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Housing Status <span class="text-muted">(Optional)</span></label>
+                            <select class="form-select" name="Homelessness">
+                                <option value="No">With Family/Renting</option>
+                                <option value="Yes">Homeless</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Peer Influence <span class="text-muted">(Optional)</span></label>
+                            <select class="form-select" name="Peer Influence">
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Jail Behavior Rating <span class="text-danger">*</span></label>
+                            <select class="form-select" name="Jail Behavior Rating" required>
+                                <option value="Good">Good</option>
+                                <option value="Fair">Fair</option>
+                                <option value="Poor">Poor</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Aggression <span class="text-muted">(Optional)</span></label>
+                            <select class="form-select" name="Aggression">
+                                <option value="Low">Low</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="High">High</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Remorse <span class="text-muted">(Optional)</span></label>
+                            <select class="form-select" name="Remorse">
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Vocational Training</label>
+                            <select class="form-select" name="Vocational Training">
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Therapy Attendance</label>
+                            <select class="form-select" name="Therapy Attendance">
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Rehab Attitude</label>
+                            <select class="form-select" name="Rehab Attitude">
+                                <option value="Cooperative">Cooperative</option>
+                                <option value="Uncooperative">Uncooperative</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rehabilitation Completion Status -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Previous Rehabilitation Plan Status <span
+                                    class="badge bg-info">For Reassessment</span></label>
+                            <select class="form-select" name="Rehab_Completed">
+                                <option value="Not Applicable">Not Applicable (First Assessment)</option>
+                                <option value="Not Started">Not Started</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Successfully Completed</option>
+                            </select>
+                            <small class="text-success"><i class="fas fa-info-circle me-1"></i>Selecting "Successfully
+                                Completed" may reduce the risk score by up to 12%.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-outline-secondary" onclick="prevStep()">
+                        <i class="fas fa-arrow-left me-2"></i> Back
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="nextStep()">
+                        Next <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Review & Predict -->
+            <div id="step3" class="wizard-step" style="display: none;">
+                <h5 class="mb-4">Step 3: Review & Run Prediction</h5>
+                <div id="reviewSummary" class="mb-4"></div>
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-outline-secondary" onclick="prevStep()">
+                        <i class="fas fa-arrow-left me-2"></i> Back
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-brain me-2"></i> RUN PREDICTION
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/wizard.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const name = urlParams.get('name');
+        const pdlId = urlParams.get('pdl_id');
+        const isReassessment = !!(name || pdlId);
+
+        // If reassessment with pdl_id, fetch and prefill data
+        if (pdlId) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.style.display = 'flex';
+
+            fetch(`/api/pdl/${pdlId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error:', data.error);
+                        loadingOverlay.style.display = 'none';
+                        return;
+                    }
+                    prefillFormData(data);
+                    loadingOverlay.style.display = 'none';
+                    setupReassessmentMode();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingOverlay.style.display = 'none';
+                    if (name) {
+                        document.querySelector('input[name="Name"]').value = name;
+                        setupReassessmentMode();
+                    }
+                });
+        } else if (name) {
+            document.querySelector('input[name="Name"]').value = name;
+            setupReassessmentMode();
+        }
+
+        function prefillFormData(data) {
+            function setField(selector, value) {
+                const field = document.querySelector(selector);
+                if (field && value !== null && value !== undefined) {
+                    field.value = value;
+                }
+            }
+
+            function setSelectField(name, value) {
+                const field = document.querySelector(`select[name="${name}"]`);
+                if (field && value) {
+                    const option = Array.from(field.options).find(opt =>
+                        opt.value.toLowerCase() === value.toString().toLowerCase() ||
+                        opt.text.toLowerCase() === value.toString().toLowerCase()
+                    );
+                    if (option) field.value = option.value;
+                }
+            }
+
+            // Step 1
+            setField('input[name="Name"]', data.name);
+            setField('input[name="Age"]', data.age);
+            setSelectField('Gender', data.gender);
+            setSelectField('Civil Status', data.civil_status);
+            setSelectField('Educational Attainment', data.education);
+            setField('input[name="Prior_Convictions"]', data.prior_convictions || 0);
+            setSelectField('Offense Type', data.offense_type || data.index_crime);
+            setSelectField('Religion', data.religion);
+            setField('input[name="Length of Current Sentence (yrs)"]', data.sentence_length || 0);
+            setField('input[name="Time Served (years)"]', data.time_served || 0);
+
+            // Step 2
+            setSelectField('Substance Abuse History', data.substance_abuse);
+            setSelectField('Mental Health Issues', data.mental_health);
+            setSelectField('Family Support', data.family_support);
+            setSelectField('Gang Affiliation', data.gang_affiliation);
+            setSelectField('Employment Status', data.employment);
+            setSelectField('Program_Participation', data.program_participation);
+        }
+
+        function setupReassessmentMode() {
+            // Step 1 fields
+            const step1Fields = [
+                'input[name="Name"]',
+                'input[name="Age"]',
+                'select[name="Gender"]',
+                'select[name="Civil Status"]',
+                'select[name="Educational Attainment"]',
+                'input[name="Prior_Convictions"]',
+                'select[name="Offense Type"]',
+                'select[name="Juvenile Records"]',
+                'select[name="Religion"]',
+                'input[name="Infractions Count"]',
+                'input[name="Length of Current Sentence (yrs)"]',
+                'input[name="Time Served (years)"]'
+            ];
+
+            // Step 2 fields
+            const step2Fields = [
+                'select[name="Substance Abuse History"]',
+                'select[name="Mental Health Issues"]',
+                'select[name="Family Support"]',
+                'select[name="Gang Affiliation"]',
+                'select[name="Employment Status"]',
+                'select[name="Program_Participation"]',
+                'select[name="Homelessness"]',
+                'select[name="Peer Influence"]',
+                'select[name="Jail Behavior Rating"]',
+                'select[name="Aggression"]',
+                'select[name="Remorse"]',
+                'select[name="Vocational Training"]',
+                'select[name="Therapy Attendance"]',
+                'select[name="Rehab Attitude"]',
+                'select[name="Rehab_Completed"]'
+            ];
+
+            // Lock fields helper
+            function lockFields(fields) {
+                fields.forEach(selector => {
+                    const field = document.querySelector(selector);
+                    if (field) {
+                        if (field.tagName === 'INPUT') {
+                            field.readOnly = true;
+                        } else if (field.tagName === 'SELECT') {
+                            field.disabled = true;
+                            const hidden = document.createElement('input');
+                            hidden.type = 'hidden';
+                            hidden.name = field.name;
+                            hidden.value = field.value;
+                            hidden.className = 'hidden-select-value';
+                            field.parentNode.appendChild(hidden);
+                        }
+                        field.classList.add('bg-light');
+                        field.style.cursor = 'not-allowed';
+                    }
+                });
+            }
+
+            // Unlock fields helper
+            function unlockFields(fields, exceptName = false) {
+                fields.forEach(selector => {
+                    const field = document.querySelector(selector);
+                    if (field && (!exceptName || field.name !== 'Name')) {
+                        if (field.tagName === 'INPUT') {
+                            field.readOnly = false;
+                        } else if (field.tagName === 'SELECT') {
+                            field.disabled = false;
+                            const hidden = field.parentNode.querySelector('.hidden-select-value');
+                            if (hidden) hidden.remove();
+                        }
+                        field.classList.remove('bg-light');
+                        field.style.cursor = '';
+                    }
+                });
+            }
+
+            // Lock both steps
+            lockFields(step1Fields);
+            lockFields(step2Fields);
+
+            // Show edit buttons
+            const editStep1Btn = document.getElementById('editStep1Btn');
+            const editStep2Btn = document.getElementById('editStep2Btn');
+
+            editStep1Btn.classList.remove('d-none');
+            editStep2Btn.classList.remove('d-none');
+
+            // Edit Step 1 handler
+            editStep1Btn.addEventListener('click', function () {
+                unlockFields(step1Fields, true); // Keep Name locked
+                this.classList.add('d-none');
+            });
+
+            // Edit Step 2 handler
+            editStep2Btn.addEventListener('click', function () {
+                unlockFields(step2Fields);
+                this.classList.add('d-none');
+            });
+        }
+    });
+</script>
+{% endblock %}

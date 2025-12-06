@@ -1,0 +1,32 @@
+Model Type: Logistic Regression
+Best Params: {'clf__C': 10, 'clf__penalty': 'l2'}
+
+--- Test Set Metrics ---
+Accuracy  : 0.6089
+AUC: 0.6316
+Precision: 0.6000
+Recall: 0.6532
+F1-Score: 0.6255
+
+Mean Confidence: 0.2783
+Std Confidence: 0.1883
+
+Confusion Matrix:
+[[140 108]
+ [ 86 162]]
+
+Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.62      0.56      0.59       248
+           1       0.60      0.65      0.63       248
+
+    accuracy                           0.61       496
+   macro avg       0.61      0.61      0.61       496
+weighted avg       0.61      0.61      0.61       496
+
+
+--- Best Pipeline Steps ---
+Step: smote -> SMOTE
+Step: scaler -> StandardScaler
+Step: clf -> LogisticRegression

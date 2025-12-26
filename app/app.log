@@ -34,3 +34,65 @@
 2025-12-03 20:52:36,733 - recidivism_app - INFO - Preprocessor loaded successfully.
 2025-12-03 20:52:36,734 - recidivism_app - INFO - Model evaluation metrics loaded successfully.
 2025-12-03 20:52:36,735 - recidivism_app - INFO - Model columns loaded successfully (20 features).
+2025-12-22 11:40:33,622 - recidivism_app - CRITICAL - Error loading model/preprocessor: No module named 'imblearn'
+2025-12-22 11:40:36,257 - recidivism_app - CRITICAL - Error loading model/preprocessor: No module named 'imblearn'
+2025-12-22 11:43:13,200 - recidivism_app - ERROR - Predict called but model not loaded.
+2025-12-22 11:43:15,213 - recidivism_app - ERROR - Predict called but model not loaded.
+2025-12-22 11:48:46,162 - recidivism_app - INFO - Model loaded successfully.
+2025-12-22 11:48:46,165 - recidivism_app - INFO - Preprocessor loaded successfully.
+2025-12-22 11:48:46,167 - recidivism_app - INFO - Model evaluation metrics loaded successfully.
+2025-12-22 11:48:46,169 - recidivism_app - INFO - Model columns loaded successfully (20 features).
+2025-12-22 11:48:46,176 - recidivism_app - INFO - SHAP importance loaded successfully (131 features).
+2025-12-22 11:48:52,883 - recidivism_app - INFO - Model loaded successfully.
+2025-12-22 11:48:52,887 - recidivism_app - INFO - Preprocessor loaded successfully.
+2025-12-22 11:48:52,889 - recidivism_app - INFO - Model evaluation metrics loaded successfully.
+2025-12-22 11:48:52,893 - recidivism_app - INFO - Model columns loaded successfully (20 features).
+2025-12-22 11:48:52,906 - recidivism_app - INFO - SHAP importance loaded successfully (131 features).
+2025-12-22 11:54:55,263 - recidivism_app - INFO - Received prediction request: {'Name': 'Test Subject SHAP', 'Age': 35, 'Gender': 'Male', 'Civil Status': 'Widowed', 'Educational Attainment': 'High School', 'Prior_Convictions': '0', 'Offense Type': 'Robbery', 'Juvenile Records': 'No', 'Infractions Count': 6, 'Religion': 'Catholic', 'Length of Current Sentence (yrs)': 5, 'Time Served (years)': '2', 'Substance Abuse History': 'Yes', 'Mental Health Issues': 'No', 'Family Support': 'Poor', 'Gang Affiliation': 'Yes', 'Employment Status': 'Unemployed', 'Program_Participation': 'No', 'Homelessness': 'No', 'Peer Influence': 'No', 'Jail Behavior Rating': 'Good', 'Aggression': 'Low', 'Remorse': 'Yes', 'Vocational Training': 'Yes', 'Therapy Attendance': 'No', 'Rehab Attitude': 'Cooperative', 'Rehab_Completed': 'Not Applicable', 'Prior Convictions': '0', 'Time Served (yrs)': 2, 'Job History': 'Unemployed', 'Type of Current Offense': 'Robbery', 'Solitary Time (days)': 0, 'Release Date': '2025-12-31', 'Impulsivity': 'Low', 'Manipulativeness': 'Low', 'Psych Assessment Result': 'Normal', 'Dependents': '0', 'Living Before Arrest': 'With Family', 'Family Relationship': 'Poor', 'Family Reunification Intent': 'Yes', 'Barangay': 'Unknown', 'Domestic Trauma': 'No', 'Peer Type': 'Positive', 'Friends w/ Record': 'No', 'Rehab Programs': 'No', 'Drug Rehab': 'No', 'NGO Support': 'No', 'Education in Jail': 'No', 'Religious Activities': 'Sometimes', 'Jail Duties': 'Yes', 'Job After Release': 'Seeking', 'Post-Release Housing': 'With Family', 'Post-Release Programs': 'None', 'Law Belief': 'Respect', 'Conflict in Jail': 'No', 'Juvenile Street Living': 'No'}
+2025-12-22 11:54:55,274 - recidivism_app - INFO - Triggered features: ['Civil Status_Widowed', 'Infractions Count', 'Homelessness_No', 'Therapy Attendance_No', 'Rehab Attitude_Cooperative', 'Job History_Unemployed']
+2025-12-22 11:54:55,695 - recidivism_app - INFO - Model loaded successfully.
+2025-12-22 11:54:55,695 - recidivism_app - INFO - Model loaded successfully.
+2025-12-22 11:54:55,698 - recidivism_app - INFO - Preprocessor loaded successfully.
+2025-12-22 11:54:55,698 - recidivism_app - INFO - Preprocessor loaded successfully.
+2025-12-22 11:54:55,700 - recidivism_app - INFO - Model evaluation metrics loaded successfully.
+2025-12-22 11:54:55,700 - recidivism_app - INFO - Model evaluation metrics loaded successfully.
+2025-12-22 11:54:55,703 - recidivism_app - INFO - Model columns loaded successfully (20 features).
+2025-12-22 11:54:55,703 - recidivism_app - INFO - Model columns loaded successfully (20 features).
+2025-12-22 11:54:55,710 - recidivism_app - INFO - SHAP importance loaded successfully (131 features).
+2025-12-22 11:54:55,710 - recidivism_app - INFO - SHAP importance loaded successfully (131 features).
+2025-12-22 11:54:55,729 - recidivism_app - ERROR - Database error during prediction save: No module named 'app.database'; 'app' is not a package
+2025-12-22 11:54:55,729 - recidivism_app - ERROR - Database error during prediction save: No module named 'app.database'; 'app' is not a package
+2025-12-22 11:54:55,733 - recidivism_app - ERROR - Traceback: Traceback (most recent call last):
+  File "C:\Users\admin\Desktop\Recidivisim Predictor\app\app.py", line 912, in predict
+    create_audit_log(
+  File "C:\Users\admin\Desktop\Recidivisim Predictor\app\audit_decorators.py", line 57, in create_audit_log
+    from app.database import db, AuditLog
+ModuleNotFoundError: No module named 'app.database'; 'app' is not a package
+
+2025-12-22 11:54:55,733 - recidivism_app - ERROR - Traceback: Traceback (most recent call last):
+  File "C:\Users\admin\Desktop\Recidivisim Predictor\app\app.py", line 912, in predict
+    create_audit_log(
+  File "C:\Users\admin\Desktop\Recidivisim Predictor\app\audit_decorators.py", line 57, in create_audit_log
+    from app.database import db, AuditLog
+ModuleNotFoundError: No module named 'app.database'; 'app' is not a package
+
+2025-12-22 12:09:12,846 - recidivism_app - INFO - Model loaded successfully.
+2025-12-22 12:09:12,849 - recidivism_app - INFO - Preprocessor loaded successfully.
+2025-12-22 12:09:12,851 - recidivism_app - INFO - Model evaluation metrics loaded successfully.
+2025-12-22 12:09:12,852 - recidivism_app - INFO - Model columns loaded successfully (20 features).
+2025-12-22 12:09:12,861 - recidivism_app - INFO - SHAP importance loaded successfully (131 features).
+2025-12-22 12:09:16,546 - recidivism_app - INFO - Model loaded successfully.
+2025-12-22 12:09:16,550 - recidivism_app - INFO - Preprocessor loaded successfully.
+2025-12-22 12:09:16,550 - recidivism_app - INFO - Model evaluation metrics loaded successfully.
+2025-12-22 12:09:16,552 - recidivism_app - INFO - Model columns loaded successfully (20 features).
+2025-12-22 12:09:16,557 - recidivism_app - INFO - SHAP importance loaded successfully (131 features).
+2025-12-22 12:19:02,371 - recidivism_app - INFO - Model loaded successfully.
+2025-12-22 12:19:02,374 - recidivism_app - INFO - Preprocessor loaded successfully.
+2025-12-22 12:19:02,375 - recidivism_app - INFO - Model evaluation metrics loaded successfully.
+2025-12-22 12:19:02,376 - recidivism_app - INFO - Model columns loaded successfully (20 features).
+2025-12-22 12:19:02,380 - recidivism_app - INFO - SHAP importance loaded successfully (131 features).
+2025-12-22 12:21:11,856 - recidivism_app - INFO - Model loaded successfully.
+2025-12-22 12:21:11,858 - recidivism_app - INFO - Preprocessor loaded successfully.
+2025-12-22 12:21:11,860 - recidivism_app - INFO - Model evaluation metrics loaded successfully.
+2025-12-22 12:21:11,861 - recidivism_app - INFO - Model columns loaded successfully (20 features).
+2025-12-22 12:21:11,868 - recidivism_app - INFO - SHAP importance loaded successfully (131 features).

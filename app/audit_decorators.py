@@ -21,7 +21,7 @@ def log_audit(action_type, description=None, model_version=None, metadata=None):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             # Import here to avoid circular dependency
-            from app.database import db, AuditLog
+            from database import db, AuditLog
             
             # Execute the function first
             result = f(*args, **kwargs)
@@ -54,7 +54,7 @@ def create_audit_log(action_type, description, prediction_id=None, pdl_id=None,
     Manually create an audit log entry.
     Use this when you need more control than the decorator provides.
     """
-    from app.database import db, AuditLog
+    from database import db, AuditLog
     from flask import session, request
     
     try:

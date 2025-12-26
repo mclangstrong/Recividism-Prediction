@@ -959,15 +959,20 @@ def download_template():
     import io
     import csv
     
-    # Define headers based on the assessment form fields
+    # Define headers based on the assessment form fields (matching assessment wizard)
     headers = [
         'Name', 'Age', 'Gender', 'Civil Status', 'Educational Attainment',
         'Prior Convictions', 'Offense Type', 'Infractions Count', 'Religion',
+        'Juvenile Records',  # Added: matches wizard Step 1
         'Length of Current Sentence (yrs)', 'Time Served (years)',
         'Substance Abuse History', 'Mental Health Issues', 'Family Support',
         'Gang Affiliation', 'Employment Status', 'Program_Participation',
         'Homelessness', 'Peer Influence', 'Jail Behavior Rating',
-        'Aggression', 'Remorse'
+        'Aggression', 'Remorse',
+        'Vocational Training',   # Added: matches wizard Step 2
+        'Therapy Attendance',    # Added: matches wizard Step 2
+        'Rehab Attitude',        # Added: matches wizard Step 2
+        'Rehab_Completed'        # Added: matches wizard Step 2 (affects risk score)
     ]
     
     # Create CSV in memory
@@ -975,15 +980,20 @@ def download_template():
     cw = csv.writer(si)
     cw.writerow(headers)
     
-    # Add a sample row
+    # Add a sample row with all fields
     cw.writerow([
         'John Doe', '30', 'Male', 'Single', 'High School',
         '0', 'Theft', '0', 'Catholic',
+        'No',        # Juvenile Records
         '2.5', '1.0',
         'No', 'No', 'Strong',
         'No', 'Employed', 'Yes',
         'No', 'No', 'Good',
-        'Low', 'Yes'
+        'Low', 'Yes',
+        'Yes',           # Vocational Training
+        'Yes',           # Therapy Attendance
+        'Cooperative',   # Rehab Attitude (Cooperative/Uncooperative)
+        'Not Applicable' # Rehab_Completed (Not Applicable/Not Started/In Progress/Completed)
     ])
     
     output = io.BytesIO()
@@ -1044,36 +1054,47 @@ def batch_predict():
                     else:
                         data['Job History'] = 'Clerk' # Protective factor default
                         
-                    # 3. Vocational Training Mapping
-                    education = data.get('Educational Attainment', '')
-                    if education in ['Vocational', 'College', 'Graduate', 'High School']:
-                        data['Vocational Training'] = 'Yes'
-                    else:
-                        data['Vocational Training'] = 'No'
+                    # 3. Vocational Training - Use CSV value if provided, otherwise derive from education
+                    if 'Vocational Training' not in data or pd.isna(data.get('Vocational Training')):
+                        education = data.get('Educational Attainment', '')
+                        if education in ['Vocational', 'College', 'Graduate', 'High School']:
+                            data['Vocational Training'] = 'Yes'
+                        else:
+                            data['Vocational Training'] = 'No'
                         
-                    # 4. Therapy Attendance Mapping
-                    if data.get('Program_Participation') == 'Yes' or \
-                       (data.get('Substance Abuse History') == 'No' and data.get('Mental Health Issues') == 'No'):
-                        data['Therapy Attendance'] = 'Yes'
-                    else:
-                        data['Therapy Attendance'] = 'No'
+                    # 4. Therapy Attendance - Use CSV value if provided, otherwise derive
+                    if 'Therapy Attendance' not in data or pd.isna(data.get('Therapy Attendance')):
+                        if data.get('Program_Participation') == 'Yes' or \
+                           (data.get('Substance Abuse History') == 'No' and data.get('Mental Health Issues') == 'No'):
+                            data['Therapy Attendance'] = 'Yes'
+                        else:
+                            data['Therapy Attendance'] = 'No'
                         
-                    # 5. Rehab Attitude Mapping
-                    if data.get('Remorse') == 'Yes':
-                        data['Rehab Attitude'] = 'Cooperative'
-                    else:
-                        data['Rehab Attitude'] = 'Indifferent'
+                    # 5. Rehab Attitude - Use CSV value if provided, otherwise derive from Remorse
+                    if 'Rehab Attitude' not in data or pd.isna(data.get('Rehab Attitude')):
+                        if data.get('Remorse') == 'Yes':
+                            data['Rehab Attitude'] = 'Cooperative'
+                        else:
+                            data['Rehab Attitude'] = 'Indifferent'
+                    
+                    # 6. Rehab_Completed - Use CSV value if provided, otherwise default
+                    if 'Rehab_Completed' not in data or pd.isna(data.get('Rehab_Completed')):
+                        data['Rehab_Completed'] = 'Not Applicable'
+                    
+                    # 7. Juvenile Records - Use CSV value if provided, otherwise default
+                    if 'Juvenile Records' not in data or pd.isna(data.get('Juvenile Records')):
+                        data['Juvenile Records'] = 'No'
                         
-                    # 6. Post-Release Housing Mapping
+                    # 8. Post-Release Housing Mapping
                     if data.get('Homelessness') == 'Yes':
                         data['Post-Release Housing'] = 'Homeless'
                     else:
                         data['Post-Release Housing'] = 'With Family'
                         
-                    # 7. Type of Current Offense Mapping
+                    # 9. Type of Current Offense Mapping
                     data['Type of Current Offense'] = data.get('Offense Type', 'Property')
                     
-                    # 8. Add Missing Defaults (required for DB/Model consistency)
+                    # 10. Add Missing Defaults (required for DB/Model consistency)
                     defaults = {
                         'Solitary Time (days)': 0,
                         'Release Date': '2025-12-31',
@@ -1167,6 +1188,81 @@ def batch_predict():
             return jsonify({'error': f"Error processing file: {str(e)}"}), 500
     else:
         return jsonify({'error': 'Invalid file type. Please upload a CSV.'}), 400
+
+@app.route('/api/export/pdl')
+@login_required
+def export_pdl_database():
+    """Export PDL database to CSV file."""
+    import csv
+    
+    try:
+        # Get all PDL records
+        pdl_records = PDL.query.order_by(PDL.created_at.desc()).all()
+        
+        if not pdl_records:
+            return jsonify({'error': 'No PDL records found'}), 404
+        
+        # Create CSV in memory
+        si = io.StringIO()
+        cw = csv.writer(si)
+        
+        # Headers matching the batch upload template format
+        headers = [
+            'PDL ID', 'Name', 'Age', 'Gender', 'Civil Status', 'Educational Attainment',
+            'Prior Convictions', 'Offense Type', 'Infractions Count', 'Religion',
+            'Length of Current Sentence (yrs)', 'Time Served (years)',
+            'Substance Abuse History', 'Mental Health Issues', 'Family Support',
+            'Gang Affiliation', 'Employment Status', 'Program_Participation',
+            'Latest Risk Level', 'Latest Probability', 'Latest Assessment Date',
+            'Admission Date', 'Created At'
+        ]
+        cw.writerow(headers)
+        
+        # Write data rows
+        for pdl in pdl_records:
+            cw.writerow([
+                pdl.pdl_id or '',
+                pdl.name or '',
+                pdl.age or '',
+                pdl.gender or '',
+                pdl.civil_status or '',
+                pdl.education or '',
+                pdl.prior_convictions or 0,
+                pdl.index_crime or '',
+                pdl.infractions_count or 0,
+                pdl.religion or '',
+                pdl.sentence_length or 0,
+                pdl.time_served or 0,
+                pdl.substance_abuse or 'No',
+                pdl.mental_health or 'No',
+                pdl.family_support or 'Moderate',
+                pdl.gang_affiliation or 'No',
+                pdl.employment or '',
+                pdl.program_participation or 'No',
+                pdl.latest_risk_level or '',
+                round(pdl.latest_probability * 100, 1) if pdl.latest_probability else '',
+                pdl.latest_assessment_date.strftime('%Y-%m-%d %H:%M') if pdl.latest_assessment_date else '',
+                pdl.admission_date.strftime('%Y-%m-%d') if pdl.admission_date else '',
+                pdl.created_at.strftime('%Y-%m-%d %H:%M') if pdl.created_at else ''
+            ])
+        
+        # Convert to bytes for download
+        output = io.BytesIO()
+        output.write(si.getvalue().encode('utf-8'))
+        output.seek(0)
+        
+        logger.info(f"Exported {len(pdl_records)} PDL records to CSV")
+        
+        return send_file(
+            output,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f'pdl_database_{datetime.now().strftime("%Y%m%d_%H%M")}.csv'
+        )
+        
+    except Exception as e:
+        logger.error(f"Error exporting PDL database: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/save_plan', methods=['POST'])
 @login_required

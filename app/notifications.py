@@ -21,7 +21,7 @@ def create_notification(notification_type, title, message, prediction_id=None, p
     Returns:
         Notification ID if successful, None otherwise
     """
-    from app.database import db, Notification
+    from database import db, Notification
     
     try:
         notification = Notification(
@@ -61,7 +61,7 @@ def create_high_risk_notification(pdl_name, pdl_id, probability, prediction_id):
 
 def mark_notification_as_read(notification_id, user_id=None):
     """Mark a notification as read."""
-    from app.database import db, Notification
+    from database import db, Notification
     
     try:
         notification = Notification.query.get(notification_id)
@@ -77,7 +77,7 @@ def mark_notification_as_read(notification_id, user_id=None):
 
 def get_unread_count(user_id=None):
     """Get count of unread notifications for a user (or all if user_id is None)."""
-    from app.database import Notification
+    from database import Notification
     
     try:
         query = Notification.query.filter_by(is_read=False)
@@ -91,7 +91,7 @@ def get_unread_count(user_id=None):
 
 def get_recent_notifications(user_id=None, limit=10):
     """Get recent notifications for a user."""
-    from app.database import Notification
+    from database import Notification
     
     try:
         query = Notification.query

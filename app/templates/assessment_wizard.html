@@ -457,6 +457,7 @@
             setSelectField('Civil Status', data.civil_status);
             setSelectField('Educational Attainment', data.education);
             setField('input[name="Prior_Convictions"]', data.prior_convictions || 0);
+            setField('input[name="Infractions Count"]', data.infractions_count || 0);
             setSelectField('Offense Type', data.offense_type || data.index_crime);
             setSelectField('Religion', data.religion);
             setField('input[name="Length of Current Sentence (yrs)"]', data.sentence_length || 0);

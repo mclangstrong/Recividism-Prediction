@@ -21,8 +21,18 @@
                     <option value="high">High Risk</option>
                 </select>
             </div>
-            <div class="col-md-4">
-                <input type="date" class="form-control form-control-sm" id="dateFilter" style="font-size: 0.875rem;">
+            <div class="col-md-2">
+                <select class="form-select form-select-sm" id="perPageSelect" style="font-size: 0.875rem;">
+                    <option value="20">20 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-sm btn-outline-primary w-100" onclick="loadReports(1)"
+                    style="font-size: 0.875rem;">
+                    <i class="fas fa-search me-1"></i>Search
+                </button>
             </div>
         </div>
     </div>
@@ -58,27 +68,69 @@
             </tbody>
         </table>
     </div>
+    <!-- Pagination Controls -->
+    <div class="card-footer d-flex justify-content-between align-items-center"
+        style="padding: 0.75rem 1.25rem; background: #F8FAFC;">
+        <div class="text-secondary" style="font-size: 0.8rem;" id="paginationInfo">
+            Showing 0 of 0 reports
+        </div>
+        <nav aria-label="Reports pagination">
+            <ul class="pagination pagination-sm mb-0" id="paginationControls">
+                <!-- Pagination buttons will be inserted here -->
+            </ul>
+        </nav>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        loadReports();
+    let currentPage = 1;
+    let totalPages = 1;
+    let perPage = 20;
 
-        document.getElementById('searchInput').addEventListener('input', filterReports);
-        document.getElementById('riskFilter').addEventListener('change', filterReports);
-        document.getElementById('dateFilter').addEventListener('change', filterReports);
+    document.addEventListener('DOMContentLoaded', function () {
+        loadReports(1);
+
+        // Enter key triggers search
+        document.getElementById('searchInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') loadReports(1);
+        });
+
+        document.getElementById('riskFilter').addEventListener('change', () => loadReports(1));
+        document.getElementById('perPageSelect').addEventListener('change', () => loadReports(1));
     });
 
-    let allReports = [];
+    function loadReports(page = 1) {
+        currentPage = page;
+        const search = document.getElementById('searchInput').value.trim();
+        const riskFilter = document.getElementById('riskFilter').value;
+        perPage = parseInt(document.getElementById('perPageSelect').value);
 
-    function loadReports() {
-        fetch('/api/reports')
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage
+        });
+
+        if (search) params.append('search', search);
+        if (riskFilter) params.append('risk', riskFilter);
+
+        // Show loading state
+        document.getElementById('reportsTableBody').innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center" style="padding: 3rem;">
+                    <div class="spinner"></div>
+                    <p class="text-secondary mt-2">Loading reports...</p>
+                </td>
+            </tr>
+        `;
+
+        fetch(`/api/reports?${params.toString()}`)
             .then(response => response.json())
             .then(data => {
-                allReports = data.reports || [];
-                displayReports(allReports);
+                totalPages = data.total_pages || 1;
+                displayReports(data.reports || [], data.total || 0, page, perPage);
+                updatePagination(data.total || 0, page, totalPages);
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -86,9 +138,9 @@
             });
     }
 
-    function displayReports(reports) {
+    function displayReports(reports, total, page, perPage) {
         const tbody = document.getElementById('reportsTableBody');
-        document.getElementById('recordCount').textContent = reports.length + ' reports';
+        document.getElementById('recordCount').textContent = total + ' reports';
 
         if (!reports || reports.length === 0) {
             displayEmptyState('No reports found');
@@ -138,6 +190,48 @@
         tbody.innerHTML = html;
     }
 
+    function updatePagination(total, page, totalPages) {
+        const start = total > 0 ? (page - 1) * perPage + 1 : 0;
+        const end = Math.min(page * perPage, total);
+
+        document.getElementById('paginationInfo').textContent =
+            `Showing ${start}-${end} of ${total} reports`;
+
+        let paginationHtml = '';
+
+        // Previous button
+        paginationHtml += `
+            <li class="page-item ${page <= 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="loadReports(${page - 1}); return false;">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+        `;
+
+        // Page numbers (show up to 5 pages)
+        const startPage = Math.max(1, page - 2);
+        const endPage = Math.min(totalPages, startPage + 4);
+
+        for (let i = startPage; i <= endPage; i++) {
+            paginationHtml += `
+                <li class="page-item ${i === page ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="loadReports(${i}); return false;">${i}</a>
+                </li>
+            `;
+        }
+
+        // Next button
+        paginationHtml += `
+            <li class="page-item ${page >= totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="loadReports(${page + 1}); return false;">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        `;
+
+        document.getElementById('paginationControls').innerHTML = paginationHtml;
+    }
+
     function displayEmptyState(message) {
         document.getElementById('reportsTableBody').innerHTML = `
             <tr>
@@ -147,28 +241,8 @@
                 </td>
             </tr>
         `;
-    }
-
-    function filterReports() {
-        const search = document.getElementById('searchInput').value.toLowerCase();
-        const riskFilter = document.getElementById('riskFilter').value.toLowerCase();
-        const dateFilter = document.getElementById('dateFilter').value;
-
-        const filtered = allReports.filter(report => {
-            const matchesSearch = !search ||
-                (report.name && report.name.toLowerCase().includes(search)) ||
-                (report.pdl_id && report.pdl_id.toLowerCase().includes(search));
-
-            const matchesRisk = !riskFilter ||
-                (report.risk_level && report.risk_level.toLowerCase() === riskFilter);
-
-            const matchesDate = !dateFilter ||
-                (report.created_at && report.created_at.startsWith(dateFilter));
-
-            return matchesSearch && matchesRisk && matchesDate;
-        });
-
-        displayReports(filtered);
+        document.getElementById('paginationInfo').textContent = 'Showing 0 of 0 reports';
+        document.getElementById('paginationControls').innerHTML = '';
     }
 
     function deleteReport(id) {
@@ -178,7 +252,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    loadReports();
+                    loadReports(currentPage);
                 } else {
                     alert('Error deleting report: ' + (data.error || 'Unknown error'));
                 }

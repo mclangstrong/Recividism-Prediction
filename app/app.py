@@ -5,6 +5,7 @@ import joblib
 import os
 import json
 import io
+import csv
 import logging
 from logging.handlers import RotatingFileHandler
 from database import db, Prediction, PDL, Officer, init_db, create_default_admin
@@ -423,6 +424,11 @@ def login():
             officer.last_login = datetime.utcnow()
             db.session.commit()
             
+            # Check if password change is required
+            if officer.must_change_password:
+                flash('You must change your password before continuing.', 'warning')
+                return redirect(url_for('change_password'))
+            
             flash(f'Welcome back, {officer.full_name}!', 'success')
             return redirect(url_for('dashboard'))
         else:
@@ -436,10 +442,69 @@ def logout():
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('login'))
 
+@app.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """Change password page and handler."""
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        officer = Officer.query.get(session['user_id'])
+        if not officer:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+        
+        # Check if force change (must_change_password flag is set)
+        force_change = officer.must_change_password
+        
+        # Validate current password (skip if force change)
+        if not force_change:
+            if not current_password or not officer.check_password(current_password):
+                return jsonify({'success': False, 'error': 'Current password is incorrect'}), 400
+        
+        # Validate new password
+        if not new_password or len(new_password) < 8:
+            return jsonify({'success': False, 'error': 'New password must be at least 8 characters'}), 400
+        
+        if new_password != confirm_password:
+            return jsonify({'success': False, 'error': 'Passwords do not match'}), 400
+        
+        # Check password strength
+        import re
+        if not re.search(r'[A-Z]', new_password):
+            return jsonify({'success': False, 'error': 'Password must contain at least one uppercase letter'}), 400
+        if not re.search(r'[a-z]', new_password):
+            return jsonify({'success': False, 'error': 'Password must contain at least one lowercase letter'}), 400
+        if not re.search(r'\d', new_password):
+            return jsonify({'success': False, 'error': 'Password must contain at least one number'}), 400
+        
+        # Update password
+        officer.set_password(new_password)
+        officer.password_changed_at = datetime.utcnow()
+        officer.must_change_password = False
+        db.session.commit()
+        
+        # Log the password change
+        from audit_decorators import create_audit_log
+        create_audit_log(
+            action_type='password_change',
+            description=f"Password changed for user {officer.username}",
+            metadata={'force_change': force_change}
+        )
+        
+        logger.info(f"Password changed for user: {officer.username}")
+        return jsonify({'success': True, 'message': 'Password changed successfully'})
+    
+    # GET request - show form
+    officer = Officer.query.get(session['user_id'])
+    force_change = officer.must_change_password if officer else False
+    return render_template('change_password.html', force_change=force_change)
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    return render_template('dashboard.html', now=datetime.now())
 
 @app.route('/predictions')
 @login_required
@@ -518,6 +583,27 @@ def model_info():
     return jsonify(info)
 
 from sqlalchemy import func, case
+
+@app.route('/api/dashboard/quick-stats')
+@login_required
+def get_quick_stats():
+    """Get today and this week assessment counts for dashboard."""
+    try:
+        from datetime import timedelta
+        
+        today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        week_start = today_start - timedelta(days=today_start.weekday())  # Monday of current week
+        
+        today_count = Prediction.query.filter(Prediction.timestamp >= today_start).count()
+        week_count = Prediction.query.filter(Prediction.timestamp >= week_start).count()
+        
+        return jsonify({
+            'today': today_count,
+            'this_week': week_count
+        })
+    except Exception as e:
+        logger.error(f"Error in quick stats: {e}")
+        return jsonify({'today': 0, 'this_week': 0})
 
 @app.route('/api/statistics')
 @cache.cached(timeout=120)  # Cache for 2 minutes
@@ -612,6 +698,158 @@ def get_statistics():
             'trends': {'labels': [], 'low': [], 'medium': [], 'high': []}
         })
 
+@app.route('/api/analytics/enhanced')
+@login_required
+def get_enhanced_analytics():
+    """
+    Enhanced analytics API with:
+    - Real weekly/daily trends
+    - Offense type breakdown
+    - Demographics (age groups, gender)
+    - Average risk score
+    - Date range filtering
+    """
+    try:
+        from datetime import timedelta
+        from sqlalchemy import case
+        
+        # Get date range from query params
+        days = request.args.get('days', 30, type=int)
+        if days == 0:  # "all" time
+            start_date = None
+        else:
+            start_date = datetime.utcnow() - timedelta(days=days)
+        
+        # Base query
+        base_query = Prediction.query
+        if start_date:
+            base_query = base_query.filter(Prediction.timestamp >= start_date)
+        
+        total = base_query.count()
+        
+        # 1. Average Risk Score
+        avg_probability = db.session.query(func.avg(Prediction.probability)).filter(
+            Prediction.timestamp >= start_date if start_date else True
+        ).scalar() or 0
+        avg_risk_score = round(avg_probability * 100, 1)
+        
+        # 2. Monthly Trends (Last 6 months)
+        from dateutil.relativedelta import relativedelta
+        monthly_trends = []
+        for i in range(5, -1, -1):
+            month_date = datetime.utcnow() - relativedelta(months=i)
+            month_start = month_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            if i > 0:
+                next_month = month_date + relativedelta(months=1)
+                month_end = next_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            else:
+                month_end = datetime.utcnow()
+            
+            low = Prediction.query.filter(
+                Prediction.timestamp >= month_start,
+                Prediction.timestamp < month_end,
+                Prediction.risk_level == 'Low'
+            ).count()
+            medium = Prediction.query.filter(
+                Prediction.timestamp >= month_start,
+                Prediction.timestamp < month_end,
+                Prediction.risk_level == 'Medium'
+            ).count()
+            high = Prediction.query.filter(
+                Prediction.timestamp >= month_start,
+                Prediction.timestamp < month_end,
+                Prediction.risk_level == 'High'
+            ).count()
+            
+            monthly_trends.append({
+                'month': month_date.strftime('%b %Y'),
+                'low': low,
+                'medium': medium,
+                'high': high,
+                'total': low + medium + high
+            })
+        
+        # 3. Offense Type Breakdown
+        offense_data = db.session.query(
+            Prediction.offense_type,
+            func.count(Prediction.id)
+        ).filter(
+            Prediction.offense_type.isnot(None),
+            Prediction.timestamp >= start_date if start_date else True
+        ).group_by(Prediction.offense_type).all()
+        
+        offense_labels = [o[0] or 'Unknown' for o in offense_data]
+        offense_values = [o[1] for o in offense_data]
+        
+        # 4. Age Demographics
+        age_groups = {
+            '18-25': (18, 25),
+            '26-35': (26, 35),
+            '36-45': (36, 45),
+            '46-55': (46, 55),
+            '55+': (56, 100)
+        }
+        age_data = {}
+        for label, (min_age, max_age) in age_groups.items():
+            count = base_query.filter(
+                Prediction.age >= min_age,
+                Prediction.age <= max_age
+            ).count()
+            age_data[label] = count
+        
+        # 5. Gender Distribution
+        male_count = base_query.filter(Prediction.gender == 'Male').count()
+        female_count = base_query.filter(Prediction.gender == 'Female').count()
+        
+        # 6. Risk Score Distribution (histogram)
+        risk_dist = {
+            '0-20%': base_query.filter(Prediction.probability < 0.2).count(),
+            '20-40%': base_query.filter(Prediction.probability >= 0.2, Prediction.probability < 0.4).count(),
+            '40-60%': base_query.filter(Prediction.probability >= 0.4, Prediction.probability < 0.6).count(),
+            '60-80%': base_query.filter(Prediction.probability >= 0.6, Prediction.probability < 0.8).count(),
+            '80-100%': base_query.filter(Prediction.probability >= 0.8).count()
+        }
+        
+        # 7. Assessments this week vs last week (comparison)
+        this_week_start = datetime.utcnow() - timedelta(days=7)
+        last_week_start = datetime.utcnow() - timedelta(days=14)
+        
+        this_week_count = Prediction.query.filter(Prediction.timestamp >= this_week_start).count()
+        last_week_count = Prediction.query.filter(
+            Prediction.timestamp >= last_week_start,
+            Prediction.timestamp < this_week_start
+        ).count()
+        
+        week_change = this_week_count - last_week_count
+        week_change_pct = round((week_change / last_week_count * 100) if last_week_count > 0 else 0, 1)
+        
+        return jsonify({
+            'total': total,
+            'average_risk_score': avg_risk_score,
+            'week_comparison': {
+                'this_week': this_week_count,
+                'last_week': last_week_count,
+                'change': week_change,
+                'change_pct': week_change_pct
+            },
+            'monthly_trends': monthly_trends,
+            'offense_types': {
+                'labels': offense_labels,
+                'data': offense_values
+            },
+            'demographics': {
+                'age_groups': age_data,
+                'gender': {'Male': male_count, 'Female': female_count}
+            },
+            'risk_distribution': risk_dist
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in enhanced analytics: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+
 @app.route('/api/pdl/list')
 def get_pdl_list():
     """Get list of all PDL records with optional filtering."""
@@ -658,6 +896,100 @@ def get_pdl_list():
         logger.error(f"Error fetching PDL list: {e}")
         return jsonify({'error': str(e), 'records': []}), 500
 
+@app.route('/api/pdl/export')
+@login_required
+def export_pdl_database():
+    """Export PDL database to CSV file with optional date range filtering."""
+    try:
+        from database import PDL
+        
+        # Get query parameters for filtering
+        search = request.args.get('search', '').strip()
+        risk_filter = request.args.get('risk', '').strip()
+        date_from = request.args.get('date_from', '').strip()
+        date_to = request.args.get('date_to', '').strip()
+        
+        # Build query
+        query = PDL.query
+        
+        if search:
+            query = query.filter(
+                (PDL.name.ilike(f'%{search}%')) | 
+                (PDL.pdl_id.ilike(f'%{search}%'))
+            )
+        
+        if risk_filter and risk_filter.lower() in ['low', 'medium', 'high']:
+            query = query.filter(PDL.latest_risk_level.ilike(risk_filter))
+        
+        # Date range filter (based on last assessment date)
+        if date_from:
+            try:
+                from_date = datetime.strptime(date_from, '%Y-%m-%d')
+                query = query.filter(PDL.latest_assessment_date >= from_date)
+            except ValueError:
+                pass
+        
+        if date_to:
+            try:
+                to_date = datetime.strptime(date_to, '%Y-%m-%d')
+                # Include the entire end date by adding one day
+                to_date = to_date.replace(hour=23, minute=59, second=59)
+                query = query.filter(PDL.latest_assessment_date <= to_date)
+            except ValueError:
+                pass
+        
+        query = query.order_by(PDL.latest_assessment_date.desc().nullslast())
+        pdl_records = query.all()
+        
+        # Create CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Header row
+        writer.writerow([
+            'PDL ID', 'Name', 'Age', 'Gender', 'Index Crime',
+            'Risk Level', 'Probability (%)', 'Last Assessment Date',
+            'Created At'
+        ])
+        
+        # Data rows
+        for pdl in pdl_records:
+            probability = f"{round(pdl.latest_probability * 100, 1)}%" if pdl.latest_probability else 'N/A'
+            last_assessed = pdl.latest_assessment_date.strftime('%Y-%m-%d') if pdl.latest_assessment_date else 'Never'
+            created = pdl.created_at.strftime('%Y-%m-%d') if pdl.created_at else 'N/A'
+            
+            writer.writerow([
+                pdl.pdl_id,
+                pdl.name or 'Unknown',
+                pdl.age or 'N/A',
+                pdl.gender or 'N/A',
+                pdl.index_crime or 'N/A',
+                pdl.latest_risk_level or 'Not Assessed',
+                probability,
+                last_assessed,
+                created
+            ])
+        
+        csv_data = output.getvalue()
+        
+        # Log the export
+        from audit_decorators import create_audit_log
+        create_audit_log(
+            action_type='export',
+            description=f"PDL Database exported to CSV ({len(pdl_records)} records)"
+        )
+        
+        return send_file(
+            io.BytesIO(csv_data.encode('utf-8')),
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f'pdl_database_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        )
+        
+    except Exception as e:
+        logger.error(f"Error exporting PDL database: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/predictions/history')
 def get_prediction_history():
     """Get recent predictions from database."""
@@ -671,9 +1003,38 @@ def get_prediction_history():
 
 @app.route('/api/reports')
 def get_reports():
-    """Get all reports (predictions) for the Reports Archive."""
+    """Get reports (predictions) for the Reports Archive with pagination."""
     try:
-        predictions = Prediction.query.order_by(Prediction.timestamp.desc()).all()
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        search = request.args.get('search', '').strip()
+        risk_filter = request.args.get('risk', '').strip()
+        
+        # Cap per_page to prevent abuse
+        per_page = min(per_page, 100)
+        
+        # Build query
+        query = Prediction.query
+        
+        # Apply search filter
+        if search:
+            query = query.filter(
+                (Prediction.name.ilike(f'%{search}%')) | 
+                (Prediction.pdl_id.ilike(f'%{search}%'))
+            )
+        
+        # Apply risk level filter
+        if risk_filter and risk_filter.lower() in ['low', 'medium', 'high']:
+            query = query.filter(Prediction.risk_level.ilike(risk_filter))
+        
+        # Get total count before pagination
+        total_count = query.count()
+        
+        # Apply ordering and pagination
+        predictions = query.order_by(Prediction.timestamp.desc())\
+            .limit(per_page).offset((page - 1) * per_page).all()
+        
         reports = []
         for p in predictions:
             reports.append({
@@ -684,10 +1045,17 @@ def get_reports():
                 'probability': p.probability,
                 'created_at': p.timestamp.isoformat() if p.timestamp else None
             })
-        return jsonify({'reports': reports})
+        
+        return jsonify({
+            'reports': reports,
+            'total': total_count,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': (total_count + per_page - 1) // per_page
+        })
     except Exception as e:
         logger.error(f"Error fetching reports: {e}")
-        return jsonify({'reports': [], 'error': str(e)})
+        return jsonify({'reports': [], 'total': 0, 'error': str(e)})
 
 @app.route('/api/reports/<int:report_id>', methods=['DELETE'])
 def delete_report(report_id):
@@ -772,6 +1140,20 @@ def predict():
     try:
         data = request.json
         logger.info(f"Received prediction request: {data}")
+        
+        # Validate and sanitize input data
+        from validators import validate_prediction_data, sanitize_prediction_data
+        
+        is_valid, validation_errors = validate_prediction_data(data)
+        if not is_valid:
+            logger.warning(f"Validation errors: {validation_errors}")
+            return jsonify({
+                'error': 'Validation failed',
+                'validation_errors': validation_errors
+            }), 400
+        
+        # Sanitize data before processing
+        data = sanitize_prediction_data(data)
         
         # Prepare features (now takes dictionary directly)
         X_final, triggered_features = prepare_features(data)
@@ -1189,80 +1571,7 @@ def batch_predict():
     else:
         return jsonify({'error': 'Invalid file type. Please upload a CSV.'}), 400
 
-@app.route('/api/export/pdl')
-@login_required
-def export_pdl_database():
-    """Export PDL database to CSV file."""
-    import csv
-    
-    try:
-        # Get all PDL records
-        pdl_records = PDL.query.order_by(PDL.created_at.desc()).all()
-        
-        if not pdl_records:
-            return jsonify({'error': 'No PDL records found'}), 404
-        
-        # Create CSV in memory
-        si = io.StringIO()
-        cw = csv.writer(si)
-        
-        # Headers matching the batch upload template format
-        headers = [
-            'PDL ID', 'Name', 'Age', 'Gender', 'Civil Status', 'Educational Attainment',
-            'Prior Convictions', 'Offense Type', 'Infractions Count', 'Religion',
-            'Length of Current Sentence (yrs)', 'Time Served (years)',
-            'Substance Abuse History', 'Mental Health Issues', 'Family Support',
-            'Gang Affiliation', 'Employment Status', 'Program_Participation',
-            'Latest Risk Level', 'Latest Probability', 'Latest Assessment Date',
-            'Admission Date', 'Created At'
-        ]
-        cw.writerow(headers)
-        
-        # Write data rows
-        for pdl in pdl_records:
-            cw.writerow([
-                pdl.pdl_id or '',
-                pdl.name or '',
-                pdl.age or '',
-                pdl.gender or '',
-                pdl.civil_status or '',
-                pdl.education or '',
-                pdl.prior_convictions or 0,
-                pdl.index_crime or '',
-                pdl.infractions_count or 0,
-                pdl.religion or '',
-                pdl.sentence_length or 0,
-                pdl.time_served or 0,
-                pdl.substance_abuse or 'No',
-                pdl.mental_health or 'No',
-                pdl.family_support or 'Moderate',
-                pdl.gang_affiliation or 'No',
-                pdl.employment or '',
-                pdl.program_participation or 'No',
-                pdl.latest_risk_level or '',
-                round(pdl.latest_probability * 100, 1) if pdl.latest_probability else '',
-                pdl.latest_assessment_date.strftime('%Y-%m-%d %H:%M') if pdl.latest_assessment_date else '',
-                pdl.admission_date.strftime('%Y-%m-%d') if pdl.admission_date else '',
-                pdl.created_at.strftime('%Y-%m-%d %H:%M') if pdl.created_at else ''
-            ])
-        
-        # Convert to bytes for download
-        output = io.BytesIO()
-        output.write(si.getvalue().encode('utf-8'))
-        output.seek(0)
-        
-        logger.info(f"Exported {len(pdl_records)} PDL records to CSV")
-        
-        return send_file(
-            output,
-            mimetype='text/csv',
-            as_attachment=True,
-            download_name=f'pdl_database_{datetime.now().strftime("%Y%m%d_%H%M")}.csv'
-        )
-        
-    except Exception as e:
-        logger.error(f"Error exporting PDL database: {e}")
-        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/save_plan', methods=['POST'])
 @login_required
@@ -1673,6 +1982,274 @@ def audit_logs_page():
         return redirect(url_for('dashboard'))
     return render_template('audit_logs.html')
 
+
+# ============================================================================
+# DATABASE BACKUP ROUTES (Admin Only)
+# ============================================================================
+
+@app.route('/api/backup/create', methods=['POST'])
+@login_required
+def create_database_backup():
+    """Create a new database backup (admin only)."""
+    # Only allow admins
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Admin privileges required'}), 403
+    
+    try:
+        from backup_utils import create_backup, cleanup_old_backups
+        from audit_decorators import create_audit_log
+        
+        success, result = create_backup()
+        
+        if success:
+            # Clean up old backups (keep last 10)
+            cleanup_old_backups(keep_count=10)
+            
+            # Log the backup
+            create_audit_log(
+                action_type='backup',
+                description=f"Database backup created: {os.path.basename(result)}",
+                metadata={'backup_path': result}
+            )
+            
+            return jsonify({
+                'success': True,
+                'message': 'Backup created successfully',
+                'filename': os.path.basename(result)
+            })
+        else:
+            return jsonify({'success': False, 'error': result}), 500
+            
+    except Exception as e:
+        logger.error(f"Error creating backup: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/backup/download/<filename>')
+@login_required
+def download_backup(filename):
+    """Download a specific backup file (admin only)."""
+    # Only allow admins
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Admin privileges required'}), 403
+    
+    try:
+        from backup_utils import list_backups
+        from audit_decorators import create_audit_log
+        
+        # Security check - only allow specific backup files
+        if not filename.startswith('recidivism_backup_') or not filename.endswith('.db'):
+            return jsonify({'error': 'Invalid backup file'}), 400
+        
+        backups = list_backups()
+        backup_info = next((b for b in backups if b['filename'] == filename), None)
+        
+        if not backup_info:
+            return jsonify({'error': 'Backup not found'}), 404
+        
+        # Log the download
+        create_audit_log(
+            action_type='backup_download',
+            description=f"Database backup downloaded: {filename}",
+            metadata={'filename': filename}
+        )
+        
+        return send_file(
+            backup_info['path'],
+            mimetype='application/octet-stream',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        logger.error(f"Error downloading backup: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/backup/list')
+@login_required
+def list_database_backups():
+    """List all available backups (admin only)."""
+    # Only allow admins
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Admin privileges required'}), 403
+    
+    try:
+        from backup_utils import list_backups
+        
+        backups = list_backups()
+        return jsonify({'backups': backups})
+        
+    except Exception as e:
+        logger.error(f"Error listing backups: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# ANALYTICS EXPORT ENDPOINT
+# ============================================================================
+
+@app.route('/api/export/analytics')
+@login_required
+def export_analytics():
+    """Export analytics data as CSV or PDF."""
+    try:
+        from datetime import timedelta
+        from export_utils import export_analytics_summary
+        
+        export_format = request.args.get('format', 'csv').lower()
+        days = request.args.get('days', 30, type=int)
+        
+        if days == 0:
+            start_date = None
+        else:
+            start_date = datetime.utcnow() - timedelta(days=days)
+        
+        # Get statistics
+        base_query = Prediction.query
+        if start_date:
+            base_query = base_query.filter(Prediction.timestamp >= start_date)
+        
+        total = base_query.count()
+        low_count = base_query.filter_by(risk_level='Low').count()
+        medium_count = base_query.filter_by(risk_level='Medium').count()
+        high_count = base_query.filter_by(risk_level='High').count()
+        
+        # Calculate average risk score
+        avg_prob = db.session.query(func.avg(Prediction.probability)).filter(
+            Prediction.timestamp >= start_date if start_date else True
+        ).scalar() or 0
+        
+        statistics = {
+            'total': total,
+            'low': {'count': low_count, 'percentage': round(low_count/total*100, 1) if total > 0 else 0},
+            'medium': {'count': medium_count, 'percentage': round(medium_count/total*100, 1) if total > 0 else 0},
+            'high': {'count': high_count, 'percentage': round(high_count/total*100, 1) if total > 0 else 0},
+            'average_risk': round(avg_prob * 100, 1)
+        }
+        
+        if export_format == 'csv':
+            # Enhanced CSV export
+            output = io.StringIO()
+            writer = csv.writer(output)
+            
+            writer.writerow(['BJMP Recidivism Prediction System - Analytics Report'])
+            writer.writerow(['Generated:', datetime.now().strftime('%B %d, %Y at %I:%M %p')])
+            writer.writerow(['Date Range:', f'Last {days} days' if days > 0 else 'All Time'])
+            writer.writerow([])
+            
+            writer.writerow(['SUMMARY STATISTICS'])
+            writer.writerow(['Metric', 'Value'])
+            writer.writerow(['Total Assessments', total])
+            writer.writerow(['Average Risk Score', f"{statistics['average_risk']}%"])
+            writer.writerow(['Low Risk', f"{low_count} ({statistics['low']['percentage']}%)"])
+            writer.writerow(['Medium Risk', f"{medium_count} ({statistics['medium']['percentage']}%)"])
+            writer.writerow(['High Risk', f"{high_count} ({statistics['high']['percentage']}%)"])
+            writer.writerow([])
+            
+            # All predictions in range
+            writer.writerow(['DETAILED ASSESSMENTS'])
+            writer.writerow(['PDL ID', 'Name', 'Age', 'Gender', 'Risk Level', 'Probability', 'Date'])
+            
+            predictions = base_query.order_by(Prediction.timestamp.desc()).all()
+            for p in predictions:
+                writer.writerow([
+                    p.pdl_id or 'N/A',
+                    p.name or 'Unknown',
+                    p.age or 'N/A',
+                    p.gender or 'N/A',
+                    p.risk_level,
+                    f"{round(p.probability*100, 1)}%" if p.probability else 'N/A',
+                    p.timestamp.strftime('%Y-%m-%d %H:%M') if p.timestamp else 'N/A'
+                ])
+            
+            csv_data = output.getvalue()
+            
+            # Log export
+            from audit_decorators import create_audit_log
+            create_audit_log(
+                action_type='export',
+                description=f"Analytics exported as CSV (Last {days} days, {total} records)"
+            )
+            
+            return send_file(
+                io.BytesIO(csv_data.encode('utf-8')),
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name=f'analytics_report_{datetime.now().strftime("%Y%m%d")}.csv'
+            )
+        
+        elif export_format == 'pdf':
+            # PDF export using reportlab
+            from reportlab.lib import colors
+            from reportlab.lib.pagesizes import letter
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.units import inch
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+            from reportlab.lib.enums import TA_CENTER
+            
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=72, bottomMargin=18)
+            elements = []
+            styles = getSampleStyleSheet()
+            
+            # Title
+            title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=20, 
+                                         textColor=colors.HexColor('#10069F'), alignment=TA_CENTER)
+            elements.append(Paragraph("BJMP Analytics Report", title_style))
+            elements.append(Spacer(1, 0.3*inch))
+            elements.append(Paragraph(f"Generated: {datetime.now().strftime('%B %d, %Y')}", styles['Normal']))
+            elements.append(Paragraph(f"Date Range: Last {days} days" if days > 0 else "All Time", styles['Normal']))
+            elements.append(Spacer(1, 0.3*inch))
+            
+            # Summary table
+            summary_data = [
+                ['Metric', 'Value'],
+                ['Total Assessments', str(total)],
+                ['Average Risk Score', f"{statistics['average_risk']}%"],
+                ['Low Risk', f"{low_count} ({statistics['low']['percentage']}%)"],
+                ['Medium Risk', f"{medium_count} ({statistics['medium']['percentage']}%)"],
+                ['High Risk', f"{high_count} ({statistics['high']['percentage']}%)"]
+            ]
+            
+            table = Table(summary_data, colWidths=[3*inch, 2*inch])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#10069F')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 11),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            elements.append(table)
+            
+            doc.build(elements)
+            pdf_bytes = buffer.getvalue()
+            buffer.close()
+            
+            # Log export
+            from audit_decorators import create_audit_log
+            create_audit_log(
+                action_type='export',
+                description=f"Analytics exported as PDF (Last {days} days)"
+            )
+            
+            return send_file(
+                io.BytesIO(pdf_bytes),
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=f'analytics_report_{datetime.now().strftime("%Y%m%d")}.pdf'
+            )
+        
+        else:
+            return jsonify({'error': 'Invalid format. Use csv or pdf'}), 400
+            
+    except Exception as e:
+        logger.error(f"Error exporting analytics: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':

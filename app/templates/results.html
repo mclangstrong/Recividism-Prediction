@@ -49,7 +49,7 @@
         <!-- ML Model Feature Importance Chart -->
         <div class="card mb-4">
             <div class="card-header" style="background: #1e3a5f; color: white;">
-                <i class="fas fa-robot me-2"></i>ML Model Breakdown
+                <i class="fas fa-chart-bar me-2"></i>Key Risk Factors
             </div>
             <div class="card-body">
                 <div style="position: relative; height: 250px; width: 100%;">
@@ -61,7 +61,7 @@
         <!-- RNR Factors Chart -->
         <div class="card mb-4">
             <div class="card-header" style="background: #1e3a5f; color: white;">
-                <i class="fas fa-chart-bar me-2"></i>RNR Score Breakdown
+                <i class="fas fa-list-ul me-2"></i>Contributing Factors
             </div>
             <div class="card-body">
                 <div style="position: relative; height: 250px; width: 100%;">
@@ -107,32 +107,7 @@
     </div>
 </div>
 
-<!-- Technical Details Section -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header" style="background: #5d6d7e; color: white; cursor: pointer;"
-                data-bs-toggle="collapse" data-bs-target="#technicalDetails">
-                <h6 class="mb-0"><i class="fas fa-cog me-2"></i>Technical Details <small class="ms-2">(Click to
-                        expand)</small></h6>
-            </div>
-            <div class="collapse" id="technicalDetails">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <strong>Identified Risk Indicators:</strong>
-                            <ul id="debugFeaturesList" class="list-group list-group-flush small"></ul>
-                        </div>
-                        <div class="col-md-6">
-                            <strong>Behavioral Risk Factors:</strong>
-                            <ul id="rnrBreakdownList" class="list-group list-group-flush small"></ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Action Buttons -->
 <div class="row mt-4">
@@ -198,22 +173,8 @@
         // Generate interventions
         generateInterventions(result);
 
-        // Technical details
-        const debugList = document.getElementById('debugFeaturesList');
-        if (debugList) {
-            debugList.innerHTML = result.triggered_features && result.triggered_features.length > 0
-                ? result.triggered_features.map(f => `<li class="list-group-item py-1">${f}</li>`).join('')
-                : '<li class="list-group-item py-1 text-muted">No specific risk features triggered</li>';
-        }
 
-        const rnrList = document.getElementById('rnrBreakdownList');
-        if (rnrList) {
-            rnrList.innerHTML = result.rnr_breakdown && result.rnr_breakdown.length > 0
-                ? result.rnr_breakdown.map(f => `<li class="list-group-item py-1">${f}</li>`).join('')
-                : '<li class="list-group-item py-1 text-muted">No RNR factors triggered</li>';
-        }
-
-        // Render ML Feature Importance Chart
+        // Render ML Feature Importance Chart (Key Risk Factors)
         console.log('Feature importance:', result.feature_importance);
         if (result.feature_importance && result.feature_importance.length > 0) {
             renderMlFeatureChart(result.feature_importance, result.ml_probability);
@@ -267,13 +228,13 @@
                     tooltip: { callbacks: { label: ctx => `Impact: ${ctx.raw}%` } },
                     title: {
                         display: true,
-                        text: `ML Prediction: ${Math.round((mlProb || 0) * 100)}%`,
+                        text: `Risk Score: ${Math.round((mlProb || 0) * 100)}%`,
                         position: 'bottom',
                         font: { size: 12, weight: 'bold' }
                     }
                 },
                 scales: {
-                    x: { beginAtZero: true, title: { display: true, text: 'Feature Importance (%)' } },
+                    x: { beginAtZero: true, title: { display: true, text: 'Impact Level (%)' } },
                     y: { ticks: { font: { size: 9 } } }
                 }
             }
@@ -359,10 +320,10 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
-                    tooltip: { callbacks: { label: ctx => `+${ctx.raw}% to RNR score` } },
+                    tooltip: { callbacks: { label: ctx => `+${ctx.raw}% contribution` } },
                     title: {
                         display: true,
-                        text: `Total RNR Score: ${Math.round((rnrProb || 0) * 100)}%`,
+                        text: `Behavioral Score: ${Math.round((rnrProb || 0) * 100)}%`,
                         position: 'bottom',
                         font: { size: 12, weight: 'bold' }
                     }

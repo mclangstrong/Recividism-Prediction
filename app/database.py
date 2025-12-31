@@ -101,6 +101,10 @@ class Officer(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     
+    # Password Reset
+    password_changed_at = db.Column(db.DateTime, nullable=True)
+    must_change_password = db.Column(db.Boolean, default=False)
+    
     def set_password(self, password):
         """Hash and set password."""
         self.password_hash = generate_password_hash(password)
